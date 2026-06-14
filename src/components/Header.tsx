@@ -1,3 +1,4 @@
+/** @jsxImportSource @opentui/solid */
 import { useTheme } from "../context/ThemeContext"
 
 export function Header({ name }: { name: string }) {
@@ -16,7 +17,7 @@ export function Header({ name }: { name: string }) {
         // border: true,
       }}
     >
-      <text style={{ color: theme.text }}>
+      <text style={{ fg: theme.text }}>
         Welcome {name} 🚀
       </text>
     </box>

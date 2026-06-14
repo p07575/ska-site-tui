@@ -1,177 +1,80 @@
-import { createContext, useContext, useState, useMemo, useEffect, useCallback, type ReactNode } from "react"
-import { useRenderer } from "@opentui/react"
-import { type SyntaxStyle } from "@opentui/core"
+import { createContext, useContext, createSignal, createEffect, createMemo, type ParentProps } from "solid-js"
+import { useRenderer } from "@opentui/solid"
 import {
   allThemes,
   hasTheme,
   resolveTheme,
-  generateSyntax,
-  generateSubtleSyntax,
   subscribeThemes,
   type Theme,
   type ThemeJson,
 } from "../theme"
 
-type ThemeContextValue = {
-  /** Current resolved theme with RGBA colors */
+export type ThemeContextValue = {
   theme: Theme
-  /** Name of the currently active theme */
-  selected: string
-  /** Get all available themes */
+  selected: () => string
   all: () => Record<string, ThemeJson>
-  /** Check if a theme exists */
   has: (name: string) => boolean
-  /** Set the active theme by name */
   set: (name: string) => boolean
-  /** Current color mode */
   mode: () => "dark" | "light"
-  /** Set the color mode */
-  setMode: (mode: "dark" | "light") => void
-  /** Whether the theme system is ready */
-  ready: boolean
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null)
+const ThemeContext = createContext<ThemeContextValue>()
 
-export type ThemeProviderProps = {
-  children: ReactNode
-  /** Initial theme name (default: "opencode") */
-  defaultTheme?: string
-  /** Initial color mode (default: "dark") */
-  defaultMode?: "dark" | "light"
-}
+export function ThemeProvider(props: ParentProps & { defaultTheme?: string; defaultMode?: "dark" | "light" }) {
+  const defaultTheme = props.defaultTheme ?? "opencode"
+  const defaultMode = props.defaultMode ?? "dark"
 
-/**
- * ThemeProvider - Provides theme state management for the application
- * 
- * Based on OpenCode's theme system, adapted for React.
- * 
- * Usage:
- * ```tsx
- * <ThemeProvider defaultTheme="tokyonight" defaultMode="dark">
- *   <App />
- * </ThemeProvider>
- * ```
- */
-export function ThemeProvider({
-  children,
-  defaultTheme = "opencode",
-  defaultMode = "dark",
-}: ThemeProviderProps) {
   const renderer = useRenderer()
-  const [activeTheme, setActiveTheme] = useState<string>(defaultTheme)
-  const [mode, setModeState] = useState<"dark" | "light">(defaultMode)
-  const [themes, setThemes] = useState<Record<string, ThemeJson>>(allThemes())
-  const [ready, setReady] = useState(false)
+  const [activeTheme, setActiveTheme] = createSignal<string>(defaultTheme)
+  const [mode] = createSignal<"dark" | "light">(defaultMode)
+  const [themes, setThemes] = createSignal<Record<string, ThemeJson>>(allThemes())
 
-  // Subscribe to theme changes
-  useEffect(() => {
-    const unsubscribe = subscribeThemes(setThemes)
-    return unsubscribe
-  }, [])
+  subscribeThemes((t) => setThemes(t))
 
-  // Resolve the current theme
-  const theme = useMemo(() => {
-    const themeJson = themes[activeTheme]
-    if (themeJson) {
-      return resolveTheme(themeJson, mode)
+  const theme = createMemo(() => {
+    const themeJson = themes()[activeTheme()]
+    if (themeJson) return resolveTheme(themeJson, mode())
+    const opencodeTheme = themes().opencode
+    if (opencodeTheme) return resolveTheme(opencodeTheme, mode())
+    throw new Error("No theme available")
+  })
+
+  createEffect(() => {
+    if (renderer && theme().background) {
+      renderer.setBackgroundColor(theme().background)
     }
-    // Fallback to opencode theme
-    return resolveTheme(themes.opencode, mode)
-  }, [activeTheme, mode, themes])
+  })
 
-  // Set background color when theme changes
-  useEffect(() => {
-    if (renderer && theme.background) {
-      renderer.setBackgroundColor(theme.background)
-    }
-  }, [renderer, theme.background])
+  const themeProxy = new Proxy({} as Theme, {
+    get(_target, prop) {
+      return (theme() as any)[prop]
+    },
+  })
 
-  // Generate syntax styles
-  const syntax = useMemo(() => generateSyntax(theme), [theme])
-  const subtleSyntax = useMemo(() => generateSubtleSyntax(theme), [theme])
-
-  // Mark as ready on mount
-  useEffect(() => {
-    setReady(true)
-  }, [])
-
-  // Set theme by name
-  const set = useCallback((name: string): boolean => {
-    if (!hasTheme(name)) return false
-    setActiveTheme(name)
-    return true
-  }, [])
-
-  // Set color mode
-  const setMode = useCallback((newMode: "dark" | "light") => {
-    setModeState(newMode)
-  }, [])
-
-  const value: ThemeContextValue = useMemo(() => ({
-    theme,
+  const value: ThemeContextValue = {
+    theme: themeProxy,
     selected: activeTheme,
     all: allThemes,
     has: hasTheme,
-    set,
-    mode: () => mode,
-    setMode,
-    ready,
-  }), [theme, activeTheme, mode, set, setMode, ready])
+    set: (name: string) => {
+      if (!hasTheme(name)) return false
+      setActiveTheme(name)
+      return true
+    },
+    mode,
+  }
 
   return (
     <ThemeContext.Provider value={value}>
-      {children}
+      {props.children}
     </ThemeContext.Provider>
   )
 }
 
-/**
- * useTheme - Hook to access theme context
- * 
- * Usage:
- * ```tsx
- * const { theme, set, mode } = useTheme()
- * 
- * // Change theme
- * set("tokyonight")
- * 
- * // Use theme colors
- * <box style={{ backgroundColor: theme.background }}>
- * ```
- */
 export function useTheme(): ThemeContextValue {
-  const context = useContext(ThemeContext)
-  if (!context) {
+  const value = useContext(ThemeContext)
+  if (!value) {
     throw new Error("useTheme must be used within a ThemeProvider")
   }
-  return context
-}
-
-/**
- * useSyntax - Hook to access syntax highlighting styles
- * 
- * Usage:
- * ```tsx
- * const syntax = useSyntax()
- * // syntax is a SyntaxStyle instance
- * ```
- */
-export function useSyntax(): SyntaxStyle {
-  const { theme } = useTheme()
-  return useMemo(() => generateSyntax(theme), [theme])
-}
-
-/**
- * useSubtleSyntax - Hook to access subtle syntax highlighting styles
- * 
- * Usage:
- * ```tsx
- * const subtleSyntax = useSubtleSyntax()
- * // subtleSyntax is a SyntaxStyle instance with reduced opacity
- * ```
- */
-export function useSubtleSyntax(): SyntaxStyle {
-  const { theme } = useTheme()
-  return useMemo(() => generateSubtleSyntax(theme), [theme])
+  return value
 }

@@ -1,5 +1,5 @@
 import { createServer } from "@opentui/ssh";
-import { createRoot, useTerminalDimensions } from "@opentui/react";
+import { render, useTerminalDimensions } from "@opentui/solid";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainContent } from "./components/MainContent";
@@ -7,9 +7,9 @@ import { ThemeProvider } from "./context/ThemeContext";
 
 const PORT = Number(process.env.PORT ?? 2222);
 
-function App({ name }: { name: string }) {
-  const { width: terminalWidth } = useTerminalDimensions();
-  const sidebarWidth = Math.max(15, Math.floor(terminalWidth * 0.2));
+function AppContent({ name }: { name: string }) {
+  const terminalDimensions = useTerminalDimensions();
+  const sidebarWidth = Math.max(15, Math.floor(terminalDimensions().width * 0.2));
 
   return (
     <box
@@ -41,17 +41,24 @@ function App({ name }: { name: string }) {
   );
 }
 
+function App({ name }: { name: string }) {
+  return (
+    <ThemeProvider>
+      <AppContent name={name} />
+    </ThemeProvider>
+  );
+}
+
 const server = createServer({
   hostKey: { path: "./.keys/host_key" },
   auth: { publicKey: "any" },
 }).serve((session) => {
   session.renderer.targetFps = 60;
-  const root = createRoot(session.renderer);
-  root.render(<ThemeProvider><App name={session.identity.username} /></ThemeProvider>);
+  render(() => <App name={session.identity.username} />, session.renderer);
   session.renderer.keyInput.on("keypress", (key) => {
     if (key.name === "q" || (key.ctrl && key.name === "c")) session.end();
   });
-  session.onClose(() => root.unmount());
+  session.onClose(() => {});
 });
 
 await server.listen(PORT);

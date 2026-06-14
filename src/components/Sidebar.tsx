@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useMemo } from "react";
-import { useKeyboard } from "@opentui/react";
-import { TextAttributes, type SelectOption } from "@opentui/core";
+/** @jsxImportSource @opentui/solid */
+import { createMemo } from "solid-js";
+import { TextAttributes, type SelectOption, type SelectKeyBinding } from "@opentui/core";
 import { useTheme } from "../context/ThemeContext";
 
 export function Sidebar({ width }: { width: number }) {
@@ -8,26 +8,22 @@ export function Sidebar({ width }: { width: number }) {
   const themes = Object.keys(all());
 
   // Build SelectOption list from themes
-  const options: SelectOption[] = useMemo(
-    () => themes.map((name) => ({ name, description: "", value: name })),
-    [themes],
+  const options = createMemo(() =>
+    themes.map((name) => ({ name, description: "", value: name })),
   );
 
   // Find initial selected index
-  const initialIndex = useMemo(() => {
-    const idx = themes.indexOf(selected);
+  const initialIndex = createMemo(() => {
+    const idx = themes.indexOf(selected());
     return idx >= 0 ? idx : 0;
-  }, [themes, selected]);
+  });
 
   // Handle theme selection from <select>
-  const handleSelect = useCallback(
-    (_index: number, option: SelectOption | null) => {
-      if (option?.value) {
-        set(option.value);
-      }
-    },
-    [set],
-  );
+  const handleSelect = (_index: number, option: SelectOption | null) => {
+    if (option?.value) {
+      set(option.value);
+    }
+  };
 
   return (
     <box
@@ -97,16 +93,17 @@ export function Sidebar({ width }: { width: number }) {
           showScrollIndicator: false,
           wrapSelection: false,
         }}
-        options={options}
-        selectedIndex={initialIndex}
+        options={options()}
+        selectedIndex={initialIndex()}
         focused={true}
+        keyBindings={[{ name: "enter", action: "select-current" }]}
         onSelect={handleSelect}
       />
 
       {/* Footer Info */}
       <box
         style={{
-          height: 3,
+          height: 6,
           border: true,
           borderStyle: "single",
           borderColor: theme.border,
@@ -114,6 +111,7 @@ export function Sidebar({ width }: { width: number }) {
           justifyContent: "center",
         }}
       >
+        <text style={{ fg: theme.textMuted }}>当前是{selected()}</text>
         <text style={{ fg: theme.textMuted }}>
           共{themes.length}
           个主题
