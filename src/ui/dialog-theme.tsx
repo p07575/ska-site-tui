@@ -1,26 +1,47 @@
 /** @jsxImportSource @opentui/solid */
 import { TextAttributes, type SelectOption } from "@opentui/core";
-import { createMemo, onCleanup } from "solid-js";
-import { useTerminalDimensions } from "@opentui/solid";
+import { createMemo, createSignal, onCleanup } from "solid-js";
+import { useKeyboard, useTerminalDimensions } from "@opentui/solid";
 import { useTheme } from "../context/ThemeContext";
 import { useDialog, type DialogContext } from "./dialog";
 
+type FocusTarget = "mode" | "select";
+
 export function ThemeDialog() {
   const dialog = useDialog();
-  const { theme, selected, all, set } = useTheme();
+  const { theme, selected, all, set, mode, setMode } = useTheme();
   const dimensions = useTerminalDimensions();
   const initialTheme = selected();
+  const initialMode = mode();
   let confirmed = false;
+
+  // Focus management: Tab cycles between "mode" and "select"
+  const [focusTarget, setFocusTarget] = createSignal<FocusTarget>("select");
+
+  useKeyboard((key) => {
+    if (key.name === "tab") {
+      // Shift+Tab goes backwards, Tab goes forwards
+      setFocusTarget((prev) => (prev === "mode" ? "select" : "mode"));
+      return;
+    }
+    // When focus is on mode toggle, handle left/right to switch
+    if (focusTarget() === "mode") {
+      if (key.name === "left" || key.name === "right") {
+        setMode(mode() === "dark" ? "light" : "dark");
+      }
+    }
+  });
 
   // Restore original theme on Esc (component cleanup without confirmation)
   onCleanup(() => {
     if (!confirmed) {
       set(initialTheme);
+      setMode(initialMode);
     }
   });
 
   const themes = Object.keys(all());
-  
+
   // Calculate select height like opencode: min of rows and half terminal height minus padding
   const selectHeight = createMemo(() => {
     const rowCount = themes.length;
@@ -53,6 +74,9 @@ export function ThemeDialog() {
     }
   };
 
+  const isDark = () => mode() === "dark";
+  const isModeFocused = () => focusTarget() === "mode";
+
   return (
     <box
       paddingLeft={2}
@@ -80,6 +104,32 @@ export function ThemeDialog() {
         </text>
       </box>
 
+      {/* Dark/Light mode toggle */}
+      <box
+        flexDirection="row"
+        gap={2}
+        paddingBottom={1}
+        border={isModeFocused()}
+        borderStyle="rounded"
+        borderColor={theme.accent}
+      >
+        <text fg={theme.textMuted}>模式:</text>
+        <text
+          fg={isDark() ? theme.accent : theme.textMuted}
+          attributes={isDark() ? TextAttributes.BOLD : undefined}
+          onMouseUp={() => setMode("dark")}
+        >
+          {isDark() ? "● " : "○ "}深色
+        </text>
+        <text
+          fg={!isDark() ? theme.accent : theme.textMuted}
+          attributes={!isDark() ? TextAttributes.BOLD : undefined}
+          onMouseUp={() => setMode("light")}
+        >
+          {!isDark() ? "● " : "○ "}浅色
+        </text>
+      </box>
+
       {/* Theme select */}
       <select
         style={{
@@ -98,21 +148,23 @@ export function ThemeDialog() {
         }}
         options={options()}
         selectedIndex={initialIndex()}
-        focused={true}
+        focused={focusTarget() === "select"}
         keyBindings={[{ name: "enter", action: "select-current" }]}
         onChange={handleChange}
         onSelect={handleConfirm}
       />
 
       {/* Keyboard hints */}
-      <text fg={theme.textMuted}>↑↓ 选择 | Enter 确认 | Esc 关闭</text>
+      <text fg={theme.textMuted}>
+        Tab 切换区域 | ←→ 切换模式 | ↑↓ 选择主题 | Enter 确认 | Esc 关闭
+      </text>
     </box>
   );
 }
 
 ThemeDialog.show = (dialog: DialogContext) => {
   return new Promise<void>((resolve) => {
-    dialog.setSize("xlarge");
+    dialog.setSize("large");
     dialog.replace(
       () => <ThemeDialog />,
       () => resolve(),

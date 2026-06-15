@@ -16,6 +16,7 @@ export type ThemeContextValue = {
   has: (name: string) => boolean
   set: (name: string) => boolean
   mode: () => "dark" | "light"
+  setMode: (mode: "dark" | "light") => void
 }
 
 const ThemeContext = createContext<ThemeContextValue>()
@@ -26,7 +27,7 @@ export function ThemeProvider(props: ParentProps & { defaultTheme?: string; defa
 
   const renderer = useRenderer()
   const [activeTheme, setActiveTheme] = createSignal<string>(defaultTheme)
-  const [mode] = createSignal<"dark" | "light">(defaultMode)
+  const [mode, setMode] = createSignal<"dark" | "light">(defaultMode)
   const [themes, setThemes] = createSignal<Record<string, ThemeJson>>(allThemes())
 
   subscribeThemes((t) => setThemes(t))
@@ -62,6 +63,7 @@ export function ThemeProvider(props: ParentProps & { defaultTheme?: string; defa
       return true
     },
     mode,
+    setMode: (m: "dark" | "light") => setMode(m),
   }
 
   return (

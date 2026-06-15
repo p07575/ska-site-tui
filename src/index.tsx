@@ -67,7 +67,7 @@ function AppContent({ name }: { name: string }) {
       title=" SKA-SITE://ROOT "
       titleAlignment="left"
     >
-      <Header name={name} />
+      {/* <Header name={name} /> */}
       <box
         style={{
           flexGrow: 1,

@@ -13,7 +13,7 @@ export function ShortcutBar() {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: theme.backgroundPanel,
+        backgroundColor: theme.background,
         paddingLeft: 1,
         paddingRight: 1,
         gap: 2,
