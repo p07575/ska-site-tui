@@ -121,7 +121,8 @@ const server = createServer({
   session.onClose(() => {});
 });
 
-await server.listen(PORT);
+// await server.listen(PORT);
+await server.listen(PORT, "0.0.0.0");
 
 process.on("SIGINT", async () => {
   await server.close();
