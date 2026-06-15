@@ -1,9 +1,30 @@
+import { watch, utimesSync } from "node:fs";
+import { resolve } from "node:path";
 import { createServer } from "@opentui/ssh";
 import { render, useTerminalDimensions } from "@opentui/solid";
+
+// Auto-restart helper for Bun watch mode on Windows since Bun does not watch files compiled by custom plugins
+if (process.execArgv.includes("--watch") || process.execArgv.includes("--hot")) {
+  const entryFile = resolve(import.meta.dir, "index.tsx");
+  watch(import.meta.dir, { recursive: true }, (eventType, filename) => {
+    if (!filename) return;
+    const fullPath = resolve(import.meta.dir, filename);
+    if (fullPath === entryFile) return;
+    if (filename.startsWith(".") || filename.includes(".git") || filename.includes("node_modules")) return;
+
+    try {
+      const now = new Date();
+      utimesSync(entryFile, now, now);
+    } catch {
+      // Ignore transient errors
+    }
+  });
+}
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainContent } from "./components/MainContent";
 import { ThemeProvider } from "./context/ThemeContext";
+import { DialogProvider } from "./ui/dialog";
 
 const PORT = Number(process.env.PORT ?? 2222);
 
@@ -44,7 +65,9 @@ function AppContent({ name }: { name: string }) {
 function App({ name }: { name: string }) {
   return (
     <ThemeProvider>
-      <AppContent name={name} />
+      <DialogProvider>
+        <AppContent name={name} />
+      </DialogProvider>
     </ThemeProvider>
   );
 }

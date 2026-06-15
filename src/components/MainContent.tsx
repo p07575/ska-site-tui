@@ -1,6 +1,7 @@
 /** @jsxImportSource @opentui/solid */
 import { TextAttributes } from "@opentui/core"
 import { useTheme } from "../context/ThemeContext"
+import { DialogDemo } from "./DialogDemo"
 
 export function MainContent() {
   const { theme, selected } = useTheme()
@@ -13,7 +14,7 @@ export function MainContent() {
         flexBasis: "auto",
         minWidth: 20,
         height: "auto",
-        flexDirection: "column",
+        // flexDirection: "column", 千万别用这个，会导致scrollbox只有一半
         backgroundColor: theme.background,
         alignItems: "stretch",
         justifyContent: "flex-start",
@@ -202,6 +203,25 @@ export function MainContent() {
           >
             <text style={{ fg: theme.text }}>元素背景</text>
           </box>
+        </box>
+      </box>
+
+      {/* Dialog Demo Section */}
+      <box
+        style={{
+          height: 6,
+          border: true,
+          borderStyle: "single",
+          borderColor: theme.border,
+          flexDirection: "column",
+          padding: 1,
+        }}
+      >
+        <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}>
+          弹窗组件演示
+        </text>
+        <box style={{ flexDirection: "row", height: 2 }}>
+          <DialogDemo />
         </box>
       </box>
     </scrollbox>
