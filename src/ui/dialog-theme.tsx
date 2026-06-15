@@ -16,7 +16,7 @@ export function ThemeDialog() {
   let confirmed = false;
 
   // Focus management: Tab cycles between "mode" and "select"
-  const [focusTarget, setFocusTarget] = createSignal<FocusTarget>("select");
+  const [focusTarget, setFocusTarget] = createSignal<FocusTarget>("mode");
 
   useKeyboard((key) => {
     if (key.name === "tab") {
@@ -81,10 +81,11 @@ export function ThemeDialog() {
     <box
       paddingLeft={2}
       paddingRight={2}
-      gap={1}
+      // gap={1}
       flexDirection="column"
       flexGrow={1}
       flexShrink={1}
+      paddingBottom={1}
     >
       {/* Title */}
       <box flexDirection="row" justifyContent="space-between">
@@ -97,62 +98,76 @@ export function ThemeDialog() {
       </box>
 
       {/* Current theme name */}
-      <box paddingBottom={1}>
-        <text fg={theme.textMuted}>当前: </text>
-        <text fg={theme.primary} attributes={TextAttributes.BOLD}>
-          {selected()}
-        </text>
-      </box>
 
       {/* Dark/Light mode toggle */}
       <box
-        flexDirection="row"
-        gap={2}
-        paddingBottom={1}
-        border={isModeFocused()}
+        flexDirection="column"
+        border={true}
         borderStyle="rounded"
-        borderColor={theme.accent}
+        borderColor={isModeFocused() ? theme.accent : theme.backgroundPanel}
+        onMouseDown={() => setFocusTarget("mode")}
       >
-        <text fg={theme.textMuted}>模式:</text>
-        <text
-          fg={isDark() ? theme.accent : theme.textMuted}
-          attributes={isDark() ? TextAttributes.BOLD : undefined}
-          onMouseUp={() => setMode("dark")}
-        >
-          {isDark() ? "● " : "○ "}深色
-        </text>
-        <text
-          fg={!isDark() ? theme.accent : theme.textMuted}
-          attributes={!isDark() ? TextAttributes.BOLD : undefined}
-          onMouseUp={() => setMode("light")}
-        >
-          {!isDark() ? "● " : "○ "}浅色
-        </text>
+        <box flexDirection="row" gap={2}>
+          <text fg={theme.textMuted}>当前: </text>
+          <text fg={theme.primary} attributes={TextAttributes.BOLD}>
+            {selected()}
+          </text>
+        </box>
+        <box flexDirection="row" gap={3}>
+          <text fg={theme.textMuted}>模式:</text>
+          <text
+            // fg={isDark() ? theme.accent : theme.textMuted}
+            fg={theme.secondary}
+            attributes={isDark() ? TextAttributes.BOLD : undefined}
+            onMouseUp={() => setMode("dark")}
+          >
+            {isDark() ? "● " : "○ "}深色
+          </text>
+          <text
+            fg={theme.secondary}
+            // fg={!isDark() ? theme.accent : theme.textMuted}
+            attributes={!isDark() ? TextAttributes.BOLD : undefined}
+            onMouseUp={() => setMode("light")}
+          >
+            {!isDark() ? "● " : "○ "}浅色
+          </text>
+        </box>
       </box>
 
       {/* Theme select */}
-      <select
-        style={{
-          backgroundColor: theme.backgroundPanel,
-          textColor: theme.textMuted,
-          focusedBackgroundColor: theme.backgroundElement,
-          focusedTextColor: theme.text,
-          selectedBackgroundColor: theme.accent,
-          selectedTextColor: theme.text,
-          descriptionColor: theme.textMuted,
-          selectedDescriptionColor: theme.textMuted,
-          showDescription: false,
-          showScrollIndicator: true,
-          wrapSelection: true,
-          height: selectHeight(),
-        }}
-        options={options()}
-        selectedIndex={initialIndex()}
-        focused={focusTarget() === "select"}
-        keyBindings={[{ name: "enter", action: "select-current" }]}
-        onChange={handleChange}
-        onSelect={handleConfirm}
-      />
+      <box
+        border={true}
+        borderStyle="rounded"
+        borderColor={
+          focusTarget() === "select" ? theme.accent : theme.backgroundPanel
+        }
+        flexGrow={1}
+        flexShrink={1}
+        onMouseDown={() => setFocusTarget("select")}
+      >
+        <select
+          style={{
+            backgroundColor: theme.backgroundPanel,
+            textColor: theme.textMuted,
+            focusedBackgroundColor: theme.backgroundElement,
+            focusedTextColor: theme.text,
+            selectedBackgroundColor: theme.accent,
+            selectedTextColor: theme.text,
+            descriptionColor: theme.textMuted,
+            selectedDescriptionColor: theme.textMuted,
+            showDescription: false,
+            showScrollIndicator: true,
+            wrapSelection: true,
+            height: selectHeight(),
+          }}
+          options={options()}
+          selectedIndex={initialIndex()}
+          focused={focusTarget() === "select"}
+          keyBindings={[{ name: "enter", action: "select-current" }]}
+          onChange={handleChange}
+          onSelect={handleConfirm}
+        />
+      </box>
 
       {/* Keyboard hints */}
       <text fg={theme.textMuted}>

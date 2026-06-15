@@ -4,13 +4,21 @@ import { createServer } from "@opentui/ssh";
 import { render, useTerminalDimensions } from "@opentui/solid";
 
 // Auto-restart helper for Bun watch mode on Windows since Bun does not watch files compiled by custom plugins
-if (process.execArgv.includes("--watch") || process.execArgv.includes("--hot")) {
+if (
+  process.execArgv.includes("--watch") ||
+  process.execArgv.includes("--hot")
+) {
   const entryFile = resolve(import.meta.dir, "index.tsx");
   watch(import.meta.dir, { recursive: true }, (eventType, filename) => {
     if (!filename) return;
     const fullPath = resolve(import.meta.dir, filename);
     if (fullPath === entryFile) return;
-    if (filename.startsWith(".") || filename.includes(".git") || filename.includes("node_modules")) return;
+    if (
+      filename.startsWith(".") ||
+      filename.includes(".git") ||
+      filename.includes("node_modules")
+    )
+      return;
 
     try {
       const now = new Date();
@@ -52,7 +60,10 @@ function KeyboardHandler() {
 
 function AppContent({ name }: { name: string }) {
   const terminalDimensions = useTerminalDimensions();
-  const sidebarWidth = Math.max(15, Math.floor(terminalDimensions().width * 0.2));
+  const sidebarWidth = Math.max(
+    15,
+    Math.floor(terminalDimensions().width * 0.2),
+  );
 
   return (
     <box
@@ -61,11 +72,13 @@ function AppContent({ name }: { name: string }) {
         height: "100%",
         flexDirection: "column",
         alignItems: "stretch",
-        border: true,
-        borderStyle: "single",
+        border: ["top", "left", "right", "bottom"],
+        borderStyle: "heavy",
       }}
       title=" SKA-SITE://ROOT "
       titleAlignment="left"
+      bottomTitle="  Ctrl+T 主题   Q/Ctrl+C 退出  "
+      bottomTitleAlignment="center"
     >
       {/* <Header name={name} /> */}
       <box
@@ -80,7 +93,7 @@ function AppContent({ name }: { name: string }) {
         <Sidebar width={sidebarWidth} />
         <MainContent />
       </box>
-      <ShortcutBar />
+      {/* <ShortcutBar /> */}
     </box>
   );
 }
