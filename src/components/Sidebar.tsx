@@ -24,7 +24,6 @@ export function Sidebar({ width }: { width: number }) {
     >
       <GifPlayer
         width={width}
-        height={15}
       />
     </box>
   );

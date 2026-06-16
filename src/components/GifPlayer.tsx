@@ -44,10 +44,12 @@ class GifPlayerRenderable extends FrameBufferRenderable {
     }
   }
 
-  public loadGif(gifData: GifData): void {
+  public loadGif(gifData: GifData, targetW: number, targetH: number): void {
     this.gifData = gifData;
     this.currentFrameIndex = 0;
     this.frameTimer = 0;
+    // Resize the underlying buffer to match calculated dimensions
+    this.frameBuffer.resize(targetW, targetH);
     this.drawCurrentFrame();
   }
 
@@ -144,7 +146,7 @@ extend({ gif_player: GifPlayerRenderable });
 
 interface GifPlayerProps {
   width?: number;
-  height?: number;
+  maxHeight?: number;
   bgColor?: string;
 }
 
@@ -180,7 +182,18 @@ export function GifPlayer(props: GifPlayerProps) {
       }
 
       if (renderableRef) {
-        renderableRef.loadGif({ width, height, frames });
+        // Calculate height from width maintaining aspect ratio
+        // Terminal chars are ~2:1 (height:width), so multiply by 0.5
+        const targetW = props.width ?? 20;
+        const aspectRatio = height / width;
+        let targetH = Math.max(1, Math.round(targetW * aspectRatio * 0.5));
+
+        // Clamp to maxHeight if provided
+        if (props.maxHeight && targetH > props.maxHeight) {
+          targetH = props.maxHeight;
+        }
+
+        renderableRef.loadGif({ width, height, frames }, targetW, targetH);
         setLoaded(true);
       }
     } catch (error) {
@@ -199,7 +212,7 @@ export function GifPlayer(props: GifPlayerProps) {
       }}
       id={`gif-player-${Math.random().toString(36).slice(2, 8)}`}
       width={props.width ?? 20}
-      height={props.height ?? 10}
+      height={1}
       live={true}
       bgColor={props.bgColor ?? "#000000"}
     />
