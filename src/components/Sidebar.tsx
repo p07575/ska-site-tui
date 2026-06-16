@@ -11,7 +11,7 @@ export function Sidebar({ width }: { width: number }) {
         flexGrow: 0,
         flexShrink: 0,
         flexBasis: width,
-        minWidth: 20,
+        minWidth: 32,
         height: "auto",
         flexDirection: "column",
         backgroundColor: theme.background,

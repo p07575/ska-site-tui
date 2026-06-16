@@ -67,7 +67,7 @@ function AppContent({ name }: { name: string }) {
   const terminalDimensions = useTerminalDimensions();
   const sidebarWidth = Math.max(
     15,
-    Math.floor(terminalDimensions().width * 0.2),
+    Math.floor(terminalDimensions().width * 0.3),
   );
 
   return (
