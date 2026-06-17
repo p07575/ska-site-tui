@@ -26,12 +26,14 @@ export function MainContent() {
         scrollY: true,
       }}
     >
-      <Image src={testImage} width={100} />
+      {/* <Image src={testImage} width={100} />
       <GifPlayer
         src={gifSrc}
         width={64}
         bgColor={theme.background.toString()}
-      />
+      /> */}
+      <Image src={testImage} width={256} forceSixels={true} />
+
     </scrollbox>
   );
 }

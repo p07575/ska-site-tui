@@ -2,7 +2,8 @@
 import { useTheme } from "../context/ThemeContext";
 import { GifPlayer } from "./GifPlayer";
 import { Image } from "./Image";
-
+// @ts-ignore
+import gifSrc from "../assets/e1480db31caad4ac819f5d777930218f.gif" with { type: "image/gif" };
 
 export function Sidebar({ width }: { width: number }) {
   const { theme } = useTheme();
@@ -24,10 +25,7 @@ export function Sidebar({ width }: { width: number }) {
         padding: 0,
       }}
     >
-      {/* <GifPlayer
-        width={width}
-      /> */}
-  
+      <GifPlayer src={gifSrc} width={64} />
     </box>
   );
 }

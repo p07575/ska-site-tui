@@ -67,7 +67,7 @@ function AppContent({ name }: { name: string }) {
   const terminalDimensions = useTerminalDimensions();
   const sidebarWidth = Math.max(
     15,
-    Math.floor(terminalDimensions().width * 0.3),
+    Math.floor(terminalDimensions().width * 0.5),
   );
 
   return (
@@ -131,6 +131,7 @@ const server = createServer({
     cols: session.cols,
     rows: session.rows,
     hasPty: session.hasPty,
+    writeRaw: (data: string) => session.write(data),
   };
   render(() => <App name={session.identity.username} sessionInfo={sessionInfo} />, session.renderer);
   session.renderer.keyInput.on("keypress", (key) => {

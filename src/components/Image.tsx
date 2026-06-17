@@ -1,5 +1,5 @@
 /** @jsxImportSource @opentui/solid */
-import { onMount, onCleanup, createSignal } from "solid-js";
+import { onMount, onCleanup, createSignal, Show } from "solid-js";
 import { useRenderer, extend } from "@opentui/solid";
 import {
   FrameBufferRenderable,
@@ -8,6 +8,7 @@ import {
   type FrameBufferOptions,
 } from "@opentui/core";
 import { Jimp } from "jimp";
+import { SixelsImage } from "./SixelsImage";
 
 interface ImageData {
   pixels: Uint8Array;
@@ -40,7 +41,6 @@ class ImageRenderable extends FrameBufferRenderable {
     const fb = this.frameBuffer;
     const pixels = this.imageData.pixels;
 
-    // Half-block rendering: each terminal row = 2 pixel rows
     for (let row = 0; row < bufH; row++) {
       const pyTop = Math.min(Math.floor((row / bufH) * imgH), imgH - 1);
       const pyBot = Math.min(Math.floor(((row + 0.5) / bufH) * imgH), imgH - 1);
@@ -94,14 +94,7 @@ class ImageRenderable extends FrameBufferRenderable {
 
 extend({ image_view: ImageRenderable });
 
-interface ImageProps {
-  src: string;
-  width?: number;
-  maxHeight?: number;
-}
-
-export function Image(props: ImageProps) {
-  const renderer = useRenderer();
+function HalfBlockImage(props: { src: string; width?: number; maxHeight?: number }) {
   const [loaded, setLoaded] = createSignal(false);
   let renderableRef: ImageRenderable | null = null;
 
@@ -149,5 +142,27 @@ export function Image(props: ImageProps) {
       width={props.width ?? 20}
       height={1}
     />
+  );
+}
+
+interface ImageProps {
+  src: string;
+  width?: number;
+  maxHeight?: number;
+  /** Force Sixels mode for debugging, bypassing capability detection */
+  forceSixels?: boolean;
+}
+
+export function Image(props: ImageProps) {
+  const renderer = useRenderer();
+  const supportsSixels = props.forceSixels || (renderer.capabilities?.sixel ?? false);
+
+  return (
+    <Show
+      when={supportsSixels}
+      fallback={<HalfBlockImage src={props.src} width={props.width} maxHeight={props.maxHeight} />}
+    >
+      <SixelsImage src={props.src} width={props.width} maxHeight={props.maxHeight} />
+    </Show>
   );
 }

@@ -10,6 +10,8 @@ export interface SessionInfo {
   cols: number
   rows: number
   hasPty: boolean
+  /** Write raw bytes directly to the SSH channel, bypassing frame rendering */
+  writeRaw?: (data: string) => void
 }
 
 const SessionContext = createContext<SessionInfo>()
