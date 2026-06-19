@@ -2,6 +2,7 @@ import { watch, utimesSync } from "node:fs";
 import { resolve } from "node:path";
 import { createServer } from "@opentui/ssh";
 import { render, useTerminalDimensions } from "@opentui/solid";
+import { createStore } from "solid-js/store";
 
 // Auto-restart helper for Bun watch mode on Windows since Bun does not watch files compiled by custom plugins
 if (
@@ -67,7 +68,7 @@ function AppContent({ name }: { name: string }) {
   const terminalDimensions = useTerminalDimensions();
   const sidebarWidth = Math.max(
     15,
-    Math.floor(terminalDimensions().width * 0.3),
+    Math.floor(terminalDimensions().width * 0.1),
   );
 
   return (
@@ -95,7 +96,7 @@ function AppContent({ name }: { name: string }) {
           gap: 0,
         }}
       >
-        <Sidebar width={sidebarWidth} />
+        {/* <Sidebar width={sidebarWidth} /> */}
         <MainContent />
       </box>
       {/* <ShortcutBar /> */}
@@ -121,7 +122,7 @@ const server = createServer({
   auth: { publicKey: "any" },
 }).serve((session) => {
   session.renderer.targetFps = 60;
-  const sessionInfo = {
+  const [sessionStore, setSessionStore] = createStore({
     username: session.identity.username,
     method: session.identity.method,
     fingerprint: session.identity.method === "publickey" ? session.identity.fingerprint : undefined,
@@ -131,8 +132,12 @@ const server = createServer({
     cols: session.cols,
     rows: session.rows,
     hasPty: session.hasPty,
-  };
-  render(() => <App name={session.identity.username} sessionInfo={sessionInfo} />, session.renderer);
+  });
+  session.renderer.on("resize",(width, height)=>{
+    setSessionStore("cols", width);
+    setSessionStore("rows", height);
+  })
+  render(() => <App name={session.identity.username} sessionInfo={sessionStore} />, session.renderer);
   session.renderer.keyInput.on("keypress", (key) => {
     if (key.name === "q" || (key.ctrl && key.name === "c")) session.end();
   });
