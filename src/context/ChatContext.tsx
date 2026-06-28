@@ -5,6 +5,7 @@ import {
   type ParentProps,
   type Accessor,
 } from "solid-js";
+import { writeFileSync } from "node:fs";
 import {
   streamChat,
   toApiMessages,
@@ -12,110 +13,170 @@ import {
   type StreamCallbacks,
 } from "../api/chat";
 
-export interface ChatMessage {
-  id: number;
+interface ChatMessage {
   role: "user" | "assistant";
   content: string;
-  isStreaming: boolean;
 }
 
 interface ChatContextValue {
-  messages: Accessor<ChatMessage[]>;
+  markdownContent: Accessor<string>;
   isStreaming: Accessor<boolean>;
   sendMessage: (text: string) => void;
   abort: () => void;
   clearMessages: () => void;
+  /** 设置 AI 上下文：key 变化时下一条消息会自动注入 context */
+  setContext: (key: string, context: string) => void;
 }
 
 const ChatContext = createContext<ChatContextValue>();
 
-let msgId = 0;
-
 export function ChatProvider(props: ParentProps) {
   const [messages, setMessages] = createSignal<ChatMessage[]>([]);
+  const [markdownContent, setMarkdownContent] = createSignal("");
   const [isStreaming, setIsStreaming] = createSignal(false);
   let abortController: AbortController | null = null;
+  let streamingIndex = -1;
+
+  // ── 上下文管理 ──
+  let currentContextKey = "";
+  let currentContextContent = "";
+  let lastSentContextKey = "";
+
+  function setContext(key: string, context: string) {
+    currentContextKey = key;
+    currentContextContent = context;
+  }
+
+  // ── Markdown 格式修正（针对 LLM 输出缺换行的问题） ──
+  function normalizeMarkdown(text: string): string {
+    if (!text) return text;
+    let s = text;
+
+    // 1. 标题缺空格：###标题 → ### 标题
+    s = s.replace(/^(#{1,6})([^\s#])/gm, "$1 $2");
+
+    // 2. 水平线粘连标题：---## → ---\n\n##
+    s = s.replace(/^(---)(#{1,6})/gm, "$1\n\n$2");
+
+    // 3. 标题粘连后续内容：### 标题文字 → ### 标题\n\n文字（仅当标题后紧跟非空非标题非列表行时）
+    s = s.replace(/^(#{1,6}\s+.+?)([^\n])(?=\n|$)/gm, (_match, heading, tail) => {
+      // 如果下一行也是标题、列表、表格、代码块、水平线，不加换行
+      return heading + tail;
+    });
+
+    // 4. 表格分隔行粘连数据行：|---|| `cmd` → |---|\n| `cmd`|
+    s = s.replace(/(\|[\s-]+\|)(\|)/g, "$1\n$2");
+
+    // 5. 代码块 ``` 后紧跟内容（非空行）时补换行
+    s = s.replace(/```(\w*)\n([^\n`])/g, "```$1\n\n$2");
+
+    // 6. 代码块 ``` 前紧跟文本时补换行
+    s = s.replace(/([^\n])```$/gm, "$1\n\n```");
+
+    return s;
+  }
+
+  function rebuildMarkdown(msgs: ChatMessage[]): string {
+    let md = "";
+    for (let i = 0; i < msgs.length; i++) {
+      const m = msgs[i]!;
+      if (m.role === "user") {
+        md += `> **You:** ${m.content}\n\n`;
+      } else {
+        md += normalizeMarkdown(m.content) + "\n\n";
+      }
+    }
+    return md;
+  }
 
   function sendMessage(text: string) {
     if (!text.trim() || isStreaming()) return;
 
     const modelId = getChatModelId();
-    console.log("[chat] modelId:", modelId);
     if (!modelId) {
       console.error("[chat] CHAT_MODEL_ID is not configured");
-      // 显示错误消息给用户
-      setMessages((prev) => [...prev, {
-        id: ++msgId,
-        role: "assistant",
-        content: "❌ CHAT_MODEL_ID 环境变量未配置",
-        isStreaming: false,
-      }]);
+      setMarkdownContent((prev) => prev + "\n\n> ❌ CHAT_MODEL_ID 未配置\n\n");
       return;
     }
 
-    // 添加用户消息
-    const userMsg: ChatMessage = {
-      id: ++msgId,
-      role: "user",
-      content: text.trim(),
-      isStreaming: false,
-    };
+    // 如果上下文变了，标记需要注入
+    let injectContext = "";
+    if (currentContextKey && currentContextKey !== lastSentContextKey && currentContextContent) {
+      injectContext = currentContextContent;
+      lastSentContextKey = currentContextKey;
+    }
 
-    // 添加占位的 assistant 消息
-    const assistantMsg: ChatMessage = {
-      id: ++msgId,
-      role: "assistant",
-      content: "",
-      isStreaming: true,
-    };
+    const userMsg: ChatMessage = { role: "user", content: text.trim() };
+    const assistantMsg: ChatMessage = { role: "assistant", content: "" };
 
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    // 先算出历史部分的 markdown 基础串
+    const baseMarkdown = rebuildMarkdown([...messages(), userMsg]);
+
+    setMessages((prev) => {
+      const next = [...prev, userMsg, assistantMsg];
+      streamingIndex = next.length - 1;
+      return next;
+    });
     setIsStreaming(true);
+    setMarkdownContent(baseMarkdown);
 
-    // 构建 API 消息历史（排除占位消息）
+    // 独立的流式字符串缓冲区 —— 不碰 messages 数组
+    let currentAssistantText = "";
+
+    // 构建 API 历史（不含占位的 assistant）
     const history = messages()
-      .filter((m) => m.id !== assistantMsg.id)
+      .filter((_, i) => i !== streamingIndex)
       .map((m) => ({ role: m.role, content: m.content }));
 
-    const apiMessages = toApiMessages(history);
+    const apiMessages = toApiMessages(history, injectContext);
     abortController = new AbortController();
 
     const callbacks: StreamCallbacks = {
       onChunk(delta: string) {
-        console.log("[chat] chunk:", delta.slice(0, 50));
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsg.id
-              ? { ...m, content: m.content + delta }
-              : m
-          )
-        );
+        currentAssistantText += delta;
+        // 每次全量覆盖，流式期间也做格式修正
+        setMarkdownContent(baseMarkdown + normalizeMarkdown(currentAssistantText));
       },
       onDone() {
-        console.log("[chat] stream done");
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsg.id ? { ...m, isStreaming: false } : m
-          )
-        );
+        // 保存完整 markdown 到文件方便调试
+        try {
+          const finalMd = baseMarkdown + currentAssistantText;
+          writeFileSync("chat-debug.md", finalMd, "utf-8");
+          console.log("[chat] Markdown saved to chat-debug.md");
+        } catch (e) {
+          console.error("[chat] Failed to save markdown:", e);
+        }
+        // 流式结束，把最终文本同步回 messages 数组
+        setMessages((prev) => {
+          const next = [...prev];
+          const target = next[streamingIndex];
+          if (target) {
+            next[streamingIndex] = { role: target.role, content: currentAssistantText };
+          }
+          return next;
+        });
+        setMarkdownContent(rebuildMarkdown(messages()));
         setIsStreaming(false);
         abortController = null;
+        streamingIndex = -1;
       },
       onError(error: Error) {
         console.error("[chat] stream error:", error.message);
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsg.id
-              ? {
-                  ...m,
-                  content: m.content || `❌ Error: ${error.message}`,
-                  isStreaming: false,
-                }
-              : m
-          )
-        );
+        setMessages((prev) => {
+          const next = [...prev];
+          const target = next[streamingIndex];
+          if (target) {
+            next[streamingIndex] = {
+              role: target.role,
+              content: currentAssistantText || `❌ ${error.message}`,
+            };
+          }
+          return next;
+        });
+        setMarkdownContent(rebuildMarkdown(messages()));
         setIsStreaming(false);
         abortController = null;
+        streamingIndex = -1;
       },
     };
 
@@ -127,26 +188,19 @@ export function ChatProvider(props: ParentProps) {
       abortController.abort();
       abortController = null;
       setIsStreaming(false);
-      // 标记最后一条 assistant 消息为非流式
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last && last.role === "assistant" && last.isStreaming) {
-          return prev.map((m) =>
-            m.id === last.id ? { ...m, isStreaming: false } : m
-          );
-        }
-        return prev;
-      });
+      streamingIndex = -1;
     }
   }
 
   function clearMessages() {
     setMessages([]);
+    setMarkdownContent("");
+    lastSentContextKey = "";
   }
 
   return (
     <ChatContext.Provider
-      value={{ messages, isStreaming, sendMessage, abort, clearMessages }}
+      value={{ markdownContent, isStreaming, sendMessage, abort, clearMessages, setContext }}
     >
       {props.children}
     </ChatContext.Provider>

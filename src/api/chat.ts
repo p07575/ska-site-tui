@@ -177,7 +177,16 @@ export async function streamChat(
   const url = `${HALO_BASE_URL}/apis/console.api.aifoundation.halo.run/v1alpha1/models/${modelId}/test-chat/ui-message/stream`;
   console.log("[chat] SSE URL:", url);
 
-  const body = JSON.stringify({ id: "chat-tui", messages });
+  const body = JSON.stringify({
+    id: "chat-tui",
+    messages,
+    system: SYSTEM_PROMPT,
+    providerOptions: {
+      openailike: {
+        thinking: { type: "disabled" },
+      },
+    },
+  });
   console.log("[chat] SSE body:", body.slice(0, 200));
 
   let resp: Response;
@@ -231,6 +240,7 @@ export async function streamChat(
             const event = JSON.parse(jsonStr);
             console.log("[chat] SSE event:", event.type, event.delta?.slice(0, 30), JSON.stringify(event).slice(0, 200));
             if (event.type === "text-delta" && event.delta) {
+              console.log("[Debug Chunk]:", JSON.stringify(event.delta));
               callbacks.onChunk(event.delta);
             } else if (event.type === "finish") {
               callbacks.onDone();
@@ -256,12 +266,23 @@ export async function streamChat(
 
 // ── 消息格式转换 ────────────────────────────────────────────────────
 
+const SYSTEM_PROMPT = `please use markdown format`;
+
 export function toApiMessages(
-  history: { role: "user" | "assistant"; content: string }[]
+  history: { role: "user" | "assistant"; content: string }[],
+  context?: string
 ): ChatApiMessage[] {
-  return history.map((msg) => ({
-    id: generateId(),
-    role: msg.role,
-    parts: [{ type: "text", id: generateId(), text: msg.content }],
-  }));
+  return history.map((msg, i) => {
+    let text = msg.content;
+    if (i === 0 && msg.role === "user" && context) {
+      text = `${context}\n\n---\n\n${msg.content}`;
+    }
+    return {
+      id: generateId(),
+      role: msg.role,
+      parts: [{ type: "text", id: generateId(), text }],
+    };
+  });
 }
+
+export { SYSTEM_PROMPT };

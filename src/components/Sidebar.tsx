@@ -2,7 +2,7 @@
 import { useTheme } from "../context/ThemeContext";
 import { useChat } from "../context/ChatContext";
 import { SyntaxStyle, parseColor } from "@opentui/core";
-import { createSignal, For, createEffect } from "solid-js";
+import { createSignal, createEffect } from "solid-js";
 
 const syntaxStyle = SyntaxStyle.fromStyles({
   keyword: { fg: parseColor("#FF7B72"), bold: true },
@@ -24,7 +24,7 @@ const syntaxStyle = SyntaxStyle.fromStyles({
   "markup.strong": { fg: parseColor("#F0F6FC"), bold: true },
   "markup.italic": { fg: parseColor("#F0F6FC"), italic: true },
   "markup.list": { fg: parseColor("#FF7B72") },
-  "markup.quote": { fg: parseColor("#8B949E"), italic: true },
+  "markup.quote": { fg: parseColor("#3FB950"), italic: true },
   "markup.raw": { fg: parseColor("#A5D6FF"), bg: parseColor("#161B22") },
   "markup.raw.block": {
     fg: parseColor("#A5D6FF"),
@@ -45,15 +45,14 @@ const syntaxStyle = SyntaxStyle.fromStyles({
   default: { fg: parseColor("#E6EDF3") },
 });
 
-export function Sidebar({ width }: { width: number }) {
+export function Sidebar({ width }: { width: number|`${number}%` }) {
   const { theme } = useTheme();
-  const { messages, isStreaming, sendMessage } = useChat();
+  const { markdownContent, isStreaming, sendMessage } = useChat();
   const [inputValue, setInputValue] = createSignal("");
   let scrollRef: any = null;
 
-  // 自动滚动到底部
   createEffect(() => {
-    messages(); // 订阅变化
+    markdownContent();
     if (scrollRef) {
       requestAnimationFrame(() => {
         scrollRef.scrollToEnd?.();
@@ -73,8 +72,9 @@ export function Sidebar({ width }: { width: number }) {
       style={{
         flexGrow: 1,
         flexShrink: 0,
-        flexBasis: width,
-        minWidth: 32,
+        // flexBasis: width,
+        // minWidth: 32,
+        width: width,
         flexDirection: "column",
         backgroundColor: theme.background,
         alignItems: "stretch",
@@ -88,6 +88,7 @@ export function Sidebar({ width }: { width: number }) {
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
+          flexShrink:0,
           alignItems: "center",
           paddingLeft: 1,
           paddingRight: 1,
@@ -97,13 +98,13 @@ export function Sidebar({ width }: { width: number }) {
         <text content="💬 AI Chat" fg="#58A6FF" />
       </box>
 
-      {/* 消息列表 */}
+      {/* 消息区域 — 单个 markdown */}
       <scrollbox
         ref={scrollRef}
         style={{
-          flexGrow: 1,
-          flexShrink: 1,
-          flexDirection: "column",
+          // flexGrow: 1,
+          // flexShrink: 1,
+          // flexDirection: "column",
           paddingLeft: 1,
           paddingRight: 1,
         }}
@@ -115,30 +116,14 @@ export function Sidebar({ width }: { width: number }) {
           minWidth: "0%",
         }}
       >
-        <For each={messages()}>
-          {(msg) => (
-            <box
-              style={{
-                flexDirection: "column",
-                marginBottom: 1,
-              }}
-            >
-              {msg.role === "user" ? (
-                <text content={"❯ " + msg.content} fg="#3FB950" />
-              ) : (
-                <markdown
-                  content={
-                    msg.content || (msg.isStreaming ? "⏳ 思考中..." : "")
-                  }
-                  syntaxStyle={syntaxStyle}
-                  streaming={msg.isStreaming}
-                  conceal={true}
-                  internalBlockMode="top-level"
-                />
-              )}
-            </box>
-          )}
-        </For>
+        <markdown
+          content={markdownContent() || "_输入消息开始对话..._"}
+          syntaxStyle={syntaxStyle}
+          streaming={isStreaming()}
+          conceal={true}
+          internalBlockMode="top-level"
+          tableOptions={{ widthMode: "content" }}
+        />
       </scrollbox>
 
       {/* 输入区域 */}
@@ -149,6 +134,7 @@ export function Sidebar({ width }: { width: number }) {
           borderColor: "#30363D",
           paddingLeft: 1,
           paddingRight: 1,
+          flexShrink:0,
         }}
       >
         <input

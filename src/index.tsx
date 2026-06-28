@@ -70,10 +70,10 @@ function KeyboardHandler() {
 
 function AppContent({ name }: { name: string }) {
   const terminalDimensions = useTerminalDimensions();
-  const sidebarWidth = Math.max(
-    15,
-    Math.floor(terminalDimensions().width * 0.1),
-  );
+  // const sidebarWidth = Math.max(
+  //   15,
+  //   Math.floor(terminalDimensions().width * 0.1),
+  // );
 
   return (
     <box
@@ -102,7 +102,8 @@ function AppContent({ name }: { name: string }) {
       >
         {/* <Sidebar width={sidebarWidth} /> */}
         <MainContent />
-        <Sidebar width={sidebarWidth} />
+        {/* <Sidebar width={sidebarWidth} /> */}
+        <Sidebar width="30%" />
       </box>
       {/* <ShortcutBar /> */}
     </box>
