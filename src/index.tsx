@@ -36,6 +36,7 @@ import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MainContent } from "./components/MainContent";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ChatProvider } from "./context/ChatContext";
 import { DialogProvider, useDialog } from "./ui/dialog";
 import { ShortcutBar } from "./components/ShortcutBar";
 import { ThemeDialog } from "./ui/dialog-theme";
@@ -118,12 +119,14 @@ function App({
   return (
     <ThemeProvider>
       <SessionProvider session={sessionInfo}>
-        <DialogProvider>
-          <KeyboardHandler />
-          <FocusProvider groups={["sidebar", "main"]}>
-            <AppContent name={name} />
-          </FocusProvider>
-        </DialogProvider>
+        <ChatProvider>
+          <DialogProvider>
+            <KeyboardHandler />
+            <FocusProvider groups={["sidebar", "main"]}>
+              <AppContent name={name} />
+            </FocusProvider>
+          </DialogProvider>
+        </ChatProvider>
       </SessionProvider>
     </ThemeProvider>
   );
