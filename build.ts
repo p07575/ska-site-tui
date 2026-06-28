@@ -13,7 +13,7 @@ const result = await Bun.build({
   plugins: [plugin],
   outdir: resolve(dir, "dist"),
   target: "bun",
-  external: ["@opentui/core-*"],
+  external: ["@opentui/core", "@opentui/core-*"],
   define: {},
 })
 
