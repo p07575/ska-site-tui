@@ -32,7 +32,7 @@ export function MainContent() {
         const title = post.spec?.title ?? "Untitled";
         chat.setContext(
           `post:${post.metadata.name}`,
-          `[Context: 当前正在阅读文章 "${title}"]\n\n${md}`,
+          `[Context: 当前正在阅读文章。文章详细信息： "${title}"]\n\n${md}`,
         );
       });
     } else {

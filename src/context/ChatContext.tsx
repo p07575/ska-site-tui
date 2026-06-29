@@ -36,8 +36,12 @@ export function ChatProvider(props: ParentProps) {
   // ── 上下文管理 ──
   let currentContextKey = "";
   let currentContextContent = "";
+  let contextDirty = false;
 
   function setContext(key: string, context: string) {
+    if (key !== currentContextKey) {
+      contextDirty = true;
+    }
     currentContextKey = key;
     currentContextContent = context;
   }
@@ -90,6 +94,20 @@ export function ChatProvider(props: ParentProps) {
         content: m.content,
       }));
 
+    // 如果上下文发生变化，在用户消息前注入上下文切换消息
+    if (contextDirty && currentContextContent) {
+      const contextSwitchMsg = {
+        role: "user" as const,
+        content: `【系统通知】上下文已切换，请基于以下内容回答后续问题：\n${currentContextContent}`,
+      };
+      const contextAckMsg = {
+        role: "assistant" as const,
+        content: "好的，ska 已经明白了(嚣张)~有什么想问的就尽管说吧！",
+      };
+      history.push(contextSwitchMsg, contextAckMsg);
+    }
+    contextDirty = false;
+
     abortController = new AbortController();
 
     const callbacks: StreamCallbacks = {
@@ -138,7 +156,6 @@ export function ChatProvider(props: ParentProps) {
       history,
       callbacks,
       abortController.signal,
-      currentContextContent,
     );
   }
 

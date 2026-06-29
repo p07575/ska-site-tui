@@ -34,6 +34,7 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
           gap: 2,
           width: "100%",
           // border: ["bottom"],
+          flexShrink:0,
         }}
       >
         <text>{"[EXIT]"}</text>
@@ -71,6 +72,7 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
         }}
         title=" AI Chat "
         titleColor="#58A6FF"
+        flexShrink={1}
       >
         <AIChat />
       </box>
