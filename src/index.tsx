@@ -42,6 +42,7 @@ import { ShortcutBar } from "./components/ShortcutBar";
 import { ThemeDialog } from "./ui/dialog-theme";
 import { UserInfoDialog } from "./ui/dialog-user-info";
 import { SessionProvider } from "./context/SessionContext";
+import { PostProvider } from "./context/PostContext";
 import { useRenderer } from "@opentui/solid";
 import { onCleanup } from "solid-js";
 
@@ -121,12 +122,14 @@ function App({
     <ThemeProvider>
       <SessionProvider session={sessionInfo}>
         <ChatProvider>
-          <DialogProvider>
-            <KeyboardHandler />
-            <FocusProvider groups={["sidebar", "main"]}>
-              <AppContent name={name} />
-            </FocusProvider>
-          </DialogProvider>
+          <PostProvider>
+            <DialogProvider>
+              <KeyboardHandler />
+              <FocusProvider groups={["sidebar", "main"]}>
+                <AppContent name={name} />
+              </FocusProvider>
+            </DialogProvider>
+          </PostProvider>
         </ChatProvider>
       </SessionProvider>
     </ThemeProvider>

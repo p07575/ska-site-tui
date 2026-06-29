@@ -4,29 +4,18 @@ import { TextAttributes, RenderableEvents } from "@opentui/core";
 import { useTheme } from "../context/ThemeContext";
 import type { ListedPostVo } from "../api/types";
 import { useFocusGroup } from "../context/FocusContext";
+import { formatDate } from "../lib/date";
 
 interface PostListProps {
   posts: ListedPostVo[];
   total: number;
-  enterPost: (post: ListedPostVo) => void; 
-}
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "未知日期";
-  try {
-    const d = new Date(dateStr);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  } catch {
-    return dateStr.slice(0, 10);
-  }
+  enterPost: (post: ListedPostVo) => void;
 }
 
 export function PostList(props: PostListProps) {
   const { theme } = useTheme();
-  const { registerItem, isActive, focusedIndex, setFocusedIndex } = useFocusGroup("main");
+  const { registerItem, isActive, focusedIndex, setFocusedIndex } =
+    useFocusGroup("main");
 
   // 处理双击文章的逻辑
   const handlePostDoubleClick = (post: ListedPostVo) => {
@@ -55,13 +44,15 @@ export function PostList(props: PostListProps) {
         <For each={props.posts}>
           {(post, index) => {
             const title = post.spec?.title ?? "无标题";
-            const author = post.owner?.displayName || post.owner?.name || "匿名";
+            const author =
+              post.owner?.displayName || post.owner?.name || "匿名";
             const publishTime = post.spec?.publishTime;
             const isFirst = () => index() === 0;
             const isLast = () => index() === props.posts.length - 1;
 
             const [isHover, setIsHover] = createSignal(false);
-            const isItemFocused = () => isActive() && focusedIndex() === index();
+            const isItemFocused = () =>
+              isActive() && focusedIndex() === index();
 
             // 👇 核心：利用闭包为每个独立的列表项记录上一次点击的时间
             let lastClickTime = 0;
@@ -69,15 +60,17 @@ export function PostList(props: PostListProps) {
 
             return (
               <box
-                focusable={true}
-                focusedBorderColor={theme.text}
-                ref={(el) => {
-                  if (!el) return;
-                  registerItem(el);
-                  el.on(RenderableEvents.FOCUSED, () => {
-                    setFocusedIndex(index());
-                  });
-                }}
+                //废弃代码：之前的方案是因为不知道可以手动监听鼠标事件，然后使用了focus
+                //且focus会强制开启边框，比较丑
+                // focusable={true}
+                // focusedBorderColor={theme.text}
+                // ref={(el) => {
+                //   if (!el) return;
+                //   registerItem(el);
+                //   el.on(RenderableEvents.FOCUSED, () => {
+                //     setFocusedIndex(index());
+                //   });
+                // }}
                 style={{
                   flexDirection: "column",
                   alignItems: "stretch",
@@ -110,11 +103,12 @@ export function PostList(props: PostListProps) {
                     case "out":
                       setIsHover(false);
                       break;
-                    
+
                     // 👇 监听鼠标按下事件
                     case "down":
                       // e.button === 0 通常代表鼠标左键
                       if (e.button === 0) {
+                        setFocusedIndex(index());
                         const now = Date.now();
                         if (now - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
                           // 🎉 成功触发双击

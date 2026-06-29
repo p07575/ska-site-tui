@@ -5,11 +5,8 @@ import {
   type ParentProps,
   type Accessor,
 } from "solid-js";
-import {
-  streamChat,
-  getAIModel,
-  type StreamCallbacks,
-} from "../api/chat";
+import { streamChat, getAIModel, type StreamCallbacks } from "../api/chat";
+
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -32,6 +29,7 @@ export function ChatProvider(props: ParentProps) {
   const [messages, setMessages] = createSignal<ChatMessage[]>([]);
   const [markdownContent, setMarkdownContent] = createSignal("");
   const [isStreaming, setIsStreaming] = createSignal(false);
+  //因为这里的数据还要提供给ui，所以不能使用普通变量。
   let abortController: AbortController | null = null;
   let streamingIndex = -1;
 
@@ -87,7 +85,10 @@ export function ChatProvider(props: ParentProps) {
     // 构建 API 历史（不含占位的 assistant）
     const history = messages()
       .filter((_, i) => i !== streamingIndex)
-      .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      .map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
 
     abortController = new AbortController();
 
@@ -101,7 +102,10 @@ export function ChatProvider(props: ParentProps) {
           const next = [...prev];
           const target = next[streamingIndex];
           if (target) {
-            next[streamingIndex] = { role: target.role, content: currentAssistantText };
+            next[streamingIndex] = {
+              role: target.role,
+              content: currentAssistantText,
+            };
           }
           return next;
         });
@@ -130,7 +134,12 @@ export function ChatProvider(props: ParentProps) {
       },
     };
 
-    streamChat(history, callbacks, abortController.signal, currentContextContent);
+    streamChat(
+      history,
+      callbacks,
+      abortController.signal,
+      currentContextContent,
+    );
   }
 
   function abort() {
@@ -149,7 +158,14 @@ export function ChatProvider(props: ParentProps) {
 
   return (
     <ChatContext.Provider
-      value={{ markdownContent, isStreaming, sendMessage, abort, clearMessages, setContext }}
+      value={{
+        markdownContent,
+        isStreaming,
+        sendMessage,
+        abort,
+        clearMessages,
+        setContext,
+      }}
     >
       {props.children}
     </ChatContext.Provider>

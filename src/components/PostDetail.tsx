@@ -63,6 +63,7 @@ export default function PostDetail(props: PostDetailProps) {
         backgroundColor: theme.background,
         padding: 1,
         scrollY: true,
+
       }}
       contentOptions={{
         flexGrow: 0,
@@ -77,7 +78,6 @@ export default function PostDetail(props: PostDetailProps) {
         conceal={true}
         internalBlockMode="top-level"
         // width="100%"
-
       />
     </scrollbox>
   );
