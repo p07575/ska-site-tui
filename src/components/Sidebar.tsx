@@ -8,7 +8,7 @@ import { useSession } from "../context/SessionContext";
 
 export function Sidebar({ width }: { width: number | `${number}%` }) {
   const { theme } = useTheme();
-  const { showPost } = usePostContext();
+  const { showPost, setShowPost } = usePostContext();
   const session = useSession();
   return (
     <box
@@ -34,11 +34,16 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
           gap: 2,
           width: "100%",
           // border: ["bottom"],
-          flexShrink:0,
+          flexShrink: 0,
         }}
       >
-        <text>{"[EXIT]"}</text>
-        <text>{"[HOME]"}</text>
+        <text
+          onMouseDown={() => {
+            setShowPost(null);
+          }}
+        >
+          {"[RETURN]"}
+        </text>
         <text bg="#ffb86c" fg="#000000">
           {"1"}
         </text>

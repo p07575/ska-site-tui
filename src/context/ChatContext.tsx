@@ -7,7 +7,6 @@ import {
 } from "solid-js";
 import { streamChat, getAIModel, type StreamCallbacks } from "../api/chat";
 
-
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -46,6 +45,7 @@ export function ChatProvider(props: ParentProps) {
     currentContextContent = context;
   }
 
+  //把历史记录数组处理成一个完整的markdown，用于界面渲染
   function rebuildMarkdown(msgs: ChatMessage[]): string {
     let md = "";
     for (let i = 0; i < msgs.length; i++) {
@@ -75,6 +75,7 @@ export function ChatProvider(props: ParentProps) {
     // 先算出历史部分的 markdown 基础串
     const baseMarkdown = rebuildMarkdown([...messages(), userMsg]);
 
+    //assistantMsg是占位用的，因为要留一个位置给ai-sdk用
     setMessages((prev) => {
       const next = [...prev, userMsg, assistantMsg];
       streamingIndex = next.length - 1;
@@ -88,7 +89,7 @@ export function ChatProvider(props: ParentProps) {
 
     // 构建 API 历史（不含占位的 assistant）
     const history = messages()
-      .filter((_, i) => i !== streamingIndex)
+      .filter((_, i) => i !== streamingIndex) //去除流式传输中的占位 assistant 消息
       .map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
@@ -116,6 +117,7 @@ export function ChatProvider(props: ParentProps) {
         setMarkdownContent(baseMarkdown + currentAssistantText);
       },
       onDone() {
+        //把占位的空 assistant 消息替换为 AI 实际回复的完整内容。
         setMessages((prev) => {
           const next = [...prev];
           const target = next[streamingIndex];
@@ -152,11 +154,7 @@ export function ChatProvider(props: ParentProps) {
       },
     };
 
-    streamChat(
-      history,
-      callbacks,
-      abortController.signal,
-    );
+    streamChat(history, callbacks, abortController.signal);
   }
 
   function abort() {
