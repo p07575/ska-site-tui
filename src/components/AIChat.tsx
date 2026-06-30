@@ -9,6 +9,7 @@ import {
 import { createSignal, createEffect } from "solid-js";
 import { useRenderer } from "@opentui/solid";
 import { createToolStatusRenderer } from "../ui/tool-status";
+import { generateSubtleSyntax } from "../theme";
 
 const syntaxStyle = SyntaxStyle.fromStyles({
   keyword: { fg: parseColor("#FF7B72"), bold: true },
@@ -118,16 +119,14 @@ export function AIChat() {
         <markdown
           content={markdownContent() || "_输入消息开始对话..._"}
           syntaxStyle={syntaxStyle}
+          // syntaxStyle={generateSubtleSyntax(theme)}
           streaming={isStreaming()}
           conceal={true}
-          internalBlockMode="top-level"
           tableOptions={{ widthMode: "content" }}
+          internalBlockMode="top-level"
           // renderNode={createMarkdownCodeBlockRenderer({
           //   taskflow: createToolStatusRenderer(renderer),
           // })}
-          renderNode={createMarkdownCodeBlockRenderer({
-            taskflow: createToolStatusRenderer(renderer),
-          })}
         />
       </scrollbox>
 

@@ -109,17 +109,15 @@ export async function streamChat(
       } else if (part.type === "tool-call") {
         // console.log(`[ska] Tool called: ${part.toolName}`, JSON.stringify(part.input));
         let chunk=`
-\`\`\`taskflow
-title 发布 markdown 插件
-owner 终端团队
-step 解析围栏语言 done
-step 渲染自定义组件 active
-step 截取屏幕截图 queued
-\`\`\`
+\n\n> **Tool Call:** 调用工具 ${part.toolName}\n\`${JSON.stringify(part.input)}\` \n\n
         `;
         callbacks.onChunk(chunk);
       } else if (part.type === "tool-result") {
-        console.log(`[ska] Tool result: ${part.toolName}`);
+        // console.log(`[ska] Tool result: ${part.toolName}`);
+        let chunk=`
+\n> **Tool Result:** 工具 ${part.toolName}\n success \n\n
+        `;
+        callbacks.onChunk(chunk);
       } else if (part.type === "finish-step") {
         console.log(`[ska] Finish step:`, JSON.stringify(part.finishReason));
       } else if (part.type === "finish") {
