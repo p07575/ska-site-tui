@@ -12,6 +12,9 @@ const provider = createOpenAICompatible({
   name: "custom",
   apiKey: AI_API_KEY,
   baseURL: AI_BASE_URL,
+  transformRequestBody: (body) => {
+    return { ...body, enable_thinking: false };// 关闭思考模式，减少不必要的延迟
+  },
 });
 
 // ── System Prompt ────────────────────────────────────────────────────
@@ -94,7 +97,7 @@ export async function streamChat(
       abortSignal: signal,
       stopWhen: isStepCount(5),
       onError({ error }) {
-        // console.error("[ska] streamText onError:", error);
+        console.error("[ska] streamText onError:", error);
       },
       onStepEnd(stepEndEvent) {
         // console.log(`[ska] Step ended:`, JSON.stringify(stepEndEvent));

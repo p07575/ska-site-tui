@@ -7,14 +7,14 @@ import { FocusProvider } from "./context/FocusContext"; // 导入你刚才写的
 import { getTreeSitterClient, addDefaultParsers } from "@opentui/core";
 import parsers from "./theme/parsers-config";
 
-// Auto-restart helper for Bun watch mode on Windows since Bun does not watch files compiled by custom plugins
+// // Auto-restart helper for Bun watch mode on Windows since Bun does not watch files compiled by custom plugins
 if (
   process.execArgv.includes("--watch") ||
   process.execArgv.includes("--hot")
 ) {
   const entryFile = resolve(import.meta.dir, "index.tsx");
   let restartTimer: NodeJS.Timeout | null = null;
-  
+
   watch(import.meta.dir, { recursive: true }, (eventType, filename) => {
     if (!filename) return;
     const fullPath = resolve(import.meta.dir, filename);
@@ -30,7 +30,7 @@ if (
     if (restartTimer) {
       clearTimeout(restartTimer);
     }
-    
+
     restartTimer = setTimeout(() => {
       try {
         const now = new Date();
@@ -112,6 +112,7 @@ function AppContent({ name }: { name: string }) {
         }}
       >
         {/* <Sidebar width={sidebarWidth} /> */}
+        
         <MainContent />
         {/* <Sidebar width={sidebarWidth} /> */}
         <Sidebar width="30%" />
@@ -189,7 +190,15 @@ const server = createServer({
 });
 
 // await server.listen(PORT);
-await server.listen(PORT, "0.0.0.0");
+try {
+  await server.listen(PORT, "0.0.0.0");
+} catch (err: any) {
+  console.error(`\n服务启动失败: ${err.message ?? err}`);
+  if (err.code === "EADDRINUSE") {
+    console.error(`  端口 ${PORT} 已被占用，请关闭占用该端口的进程后重试。`);
+  }
+  process.exit(1);
+}
 
 process.on("SIGINT", async () => {
   await server.close();
