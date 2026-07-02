@@ -14,6 +14,9 @@ import type { ListedPostVo } from "../api/types";
 import { useFocusGroup } from "../context/FocusContext";
 import { useDialog } from "../ui/dialog";
 import { formatDate } from "../lib/date";
+import { fastScroll } from "../lib/scroll-accel";
+import { useSession } from "../context/SessionContext";
+import { usePostContext } from "../context/PostContext";
 
 interface PostListProps {
   posts: ListedPostVo[];
@@ -40,6 +43,8 @@ export function PostList(props: PostListProps) {
   const renderer = useRenderer();
   const dialog = useDialog();
   const { focusedIndex, setFocusedIndex, isActive } = useFocusGroup("main");
+  const session = useSession();
+  const { showPost, setShowPost } = usePostContext();
 
   // ── scrollbox ref，用于 scrollChildIntoView 滚动到聚焦卡片 ──
   let scrollboxRef: any = null;
@@ -108,6 +113,10 @@ export function PostList(props: PostListProps) {
 
   onMount(() => {
     renderer.keyInput.on("keypress", handleKey);
+    // PostList 每次挂载都是从文章详情返回，延迟一帧确保卡片 refs 已挂载
+    if (props.posts.length > 0) {
+      setTimeout(() => focusCard(focusedIndex()), 0);
+    }
   });
 
   onCleanup(() => {
@@ -115,195 +124,223 @@ export function PostList(props: PostListProps) {
   });
 
   return (
-    <scrollbox
-      ref={(r) => (scrollboxRef = r)}
-      style={{
-        flexGrow: 0,
-        flexShrink: 1,
-        height: "100%",
-        flexDirection: "row",
-        backgroundColor: theme.background,
-        margin: 0,
-        padding: 1,
-        paddingTop: 0,
-        scrollY: true,
-      }}
-      contentOptions={{
-        flexGrow: 0,
-        minWidth: "0%",
-      }}
-      verticalScrollbarOptions={{
-        trackOptions: {
-          foregroundColor: "transparent",
-          backgroundColor: "transparent",
-        },
-      }}
-    >
+    <box>
+      {/* ── 列表头 ── */}
       <box
         style={{
-          flexDirection: "column",
-          alignItems: "stretch",
-          justifyContent: "flex-start",
-          padding: 0,
-          gap: 0,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingLeft: 1,
+          paddingRight: 1,
+          paddingBottom: 1,
         }}
       >
-        {/* ── 列表头 ── */}
-        <box
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingLeft: 1,
-            paddingRight: 1,
-            paddingBottom: 1,
+        <text
+          onMouseDown={() => {
+            if (showPost() == null) {
+              session.endSession();
+              return;
+            }
+            setShowPost(null);
           }}
         >
-          <text
-            style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}
-          >
-            ✦ 文章列表
-          </text>
-          <text style={{ fg: theme.textMuted }}>
-            共 {props.total} 篇
-          </text>
-        </box>
+          {showPost() == null ? "[ESC] 断开连接" : "[ESC] 返回首页"}
+        </text>
+        <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}>
+          ✦ 文章列表
+        </text>
+        <text style={{ fg: theme.textMuted }}>共 {props.total} 篇</text>
+        <text>{"[Ctrl+T] 主题切换"}</text>
+      </box>
+      <scrollbox
+        ref={(r) => (scrollboxRef = r)}
+        scrollAcceleration={fastScroll}
+        style={{
+          flexGrow: 0,
+          flexShrink: 1,
+          height: "100%",
+          flexDirection: "row",
+          backgroundColor: theme.background,
+          margin: 0,
+          padding: 1,
+          paddingTop: 0,
+          scrollY: true,
+        }}
+        contentOptions={{
+          flexGrow: 0,
+          minWidth: "0%",
+        }}
+        // verticalScrollbarOptions={{
+        //   trackOptions: {
+        //     foregroundColor: "transparent",
+        //     backgroundColor: "transparent",
+        //   },
+        // }}
+      >
+        <box
+          style={{
+            flexDirection: "column",
+            alignItems: "stretch",
+            justifyContent: "flex-start",
+            padding: 0,
+            gap: 0,
+          }}
+        >
+          {/* ── 文章卡片列表 ── */}
+          <box style={{ flexDirection: "column", gap: 1 }}>
+            <For each={props.posts}>
+              {(post, index) => {
+                const title = post.spec?.title ?? "无标题";
+                const author =
+                  post.owner?.displayName || post.owner?.name || "匿名";
+                const publishTime = post.spec?.publishTime;
+                const slug = post.metadata?.name ?? "";
 
-        {/* ── 文章卡片列表 ── */}
-        <box style={{ flexDirection: "column", gap: 1 }}>
-          <For each={props.posts}>
-            {(post, index) => {
-              const title = post.spec?.title ?? "无标题";
-              const author =
-                post.owner?.displayName || post.owner?.name || "匿名";
-              const publishTime = post.spec?.publishTime;
-              const slug = post.metadata?.name ?? "";
+                const [isHover, setIsHover] = createSignal(false);
+                const isFocused = () => focusedIndex() === index();
 
-              const [isHover, setIsHover] = createSignal(false);
-              const isFocused = () => focusedIndex() === index();
+                // 利用闭包记录上次点击时间，实现双击判定
+                let lastClickTime = 0;
+                const DOUBLE_CLICK_THRESHOLD = 300;
 
-              // 利用闭包记录上次点击时间，实现双击判定
-              let lastClickTime = 0;
-              const DOUBLE_CLICK_THRESHOLD = 300;
-
-              return (
-                <box
-                  id={slug}
-                  ref={(el) => {
-                    if (el && slug) cardRefs.set(slug, el);
-                    else if (!el && slug) cardRefs.delete(slug);
-                  }}
-                  focusable={true}
-                  focusedBorderColor={theme.accent}
-                  style={{
-                    flexDirection: "column",
-                    padding: 1,
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                    gap: 0,
-                    border: true,
-                    borderStyle: "rounded",
-                    borderColor: isFocused()
-                      ? theme.accent
-                      : isHover()
-                        ? theme.borderActive
-                        : theme.borderSubtle,
-                    backgroundColor: isFocused()
-                      ? theme.backgroundElement
-                      : isHover()
+                return (
+                  <box
+                    id={slug}
+                    ref={(el) => {
+                      if (el && slug) cardRefs.set(slug, el);
+                      else if (!el && slug) cardRefs.delete(slug);
+                    }}
+                    focusable={true}
+                    focusedBorderColor={theme.accent}
+                    style={{
+                      flexDirection: "row",
+                      padding: 1,
+                      paddingLeft: 2,
+                      paddingRight: 2,
+                      gap: 0,
+                      border: true,
+                      borderStyle: "single",
+                      borderColor: isFocused()
+                        ? theme.accent
+                        : isHover()
+                          ? theme.borderActive
+                          : theme.borderSubtle,
+                      backgroundColor: isFocused()
                         ? theme.backgroundElement
-                        : theme.backgroundPanel,
-                  }}
-                  onMouse={(e) => {
-                    switch (e.type) {
-                      case "over":
-                        setIsHover(true);
-                        break;
-                      case "out":
-                        setIsHover(false);
-                        break;
-                      case "down":
-                        if (e.button === 0) {
-                          setFocusedIndex(index());
-                          focusCard(index());
-                          const now = Date.now();
-                          if (now - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
-                            props.enterPost(post);
-                            lastClickTime = 0;
-                          } else {
-                            lastClickTime = now;
+                        : isHover()
+                          ? theme.backgroundElement
+                          : theme.backgroundPanel,
+                    }}
+                    onMouse={(e) => {
+                      switch (e.type) {
+                        case "over":
+                          setIsHover(true);
+                          break;
+                        case "out":
+                          setIsHover(false);
+                          break;
+                        case "down":
+                          if (e.button === 0) {
+                            setFocusedIndex(index());
+                            focusCard(index());
+                            const now = Date.now();
+                            if (now - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
+                              props.enterPost(post);
+                              lastClickTime = 0;
+                            } else {
+                              lastClickTime = now;
+                            }
                           }
-                        }
-                        break;
-                    }
-                  }}
-                >
-                  {/* 第一行：标题 */}
-                  <box style={{ flexDirection: "row", alignItems: "center" }}>
-                    <text
+                          break;
+                      }
+                    }}
+                  >
+                    <box
                       style={{
-                        fg: isFocused() ? theme.accent : theme.text,
-                        attributes: TextAttributes.BOLD,
+                        marginRight: 2,
                       }}
                     >
-                      {title}
-                    </text>
-                  </box>
-
-                  {/* 第二行：作者 + 发布时间 */}
-                  <box style={{ flexDirection: "row", alignItems: "center" }}>
-                    <text style={{ fg: theme.primary }}>✎ </text>
-                    <text style={{ fg: theme.textMuted }}>{author}</text>
-                    {publishTime && (
-                      <>
-                        <text style={{ fg: theme.borderSubtle }}>  │  </text>
-                        <text style={{ fg: theme.textMuted }}>
-                          {formatDate(publishTime)}
-                        </text>
-                        {formatTime(publishTime) && (
-                          <text style={{ fg: theme.textMuted }}>
-                            {" "}
-                            {formatTime(publishTime)}
-                          </text>
-                        )}
-                      </>
-                    )}
-                  </box>
-
-                  {/* 第三行：slug 标识 */}
-                  {slug && (
-                    <box style={{ flexDirection: "row", alignItems: "center" }}>
-                      <text style={{ fg: theme.secondary }}>@ </text>
-                      <text
-                        style={{
-                          fg: theme.secondary,
-                          attributes: TextAttributes.DIM,
-                        }}
-                      >
-                        {slug}
-                      </text>
+                      <ascii_font
+                        text={(index() + 1).toString()}
+                        font="block"
+                      />
                     </box>
-                  )}
-                </box>
-              );
-            }}
-          </For>
-        </box>
+                    <box>
+                      {/* 第一行：标题 */}
+                      <box
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <text
+                          style={{
+                            fg: isFocused() ? theme.accent : theme.text,
+                            attributes: TextAttributes.BOLD,
+                          }}
+                        >
+                          {title}
+                        </text>
+                      </box>
 
-        {/* ── 空状态 ── */}
-        {props.posts.length === 0 && (
-          <box
-            style={{
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 4,
-            }}
-          >
-            <text style={{ fg: theme.textMuted }}>暂无文章</text>
+                      {/* 第二行：作者 + 发布时间 */}
+                      <box
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <text style={{ fg: theme.primary }}>✎ </text>
+                        <text style={{ fg: theme.textMuted }}>{author}</text>
+                        {publishTime && (
+                          <>
+                            <text style={{ fg: theme.borderSubtle }}> │ </text>
+                            <text style={{ fg: theme.textMuted }}>
+                              {formatDate(publishTime)}
+                            </text>
+                            {formatTime(publishTime) && (
+                              <text style={{ fg: theme.textMuted }}>
+                                {" "}
+                                {formatTime(publishTime)}
+                              </text>
+                            )}
+                          </>
+                        )}
+                      </box>
+
+                      {/* 第三行：slug 标识 */}
+                      {slug && (
+                        <box
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          <text style={{ fg: theme.secondary }}>@ </text>
+                          <text
+                            style={{
+                              fg: theme.secondary,
+                              attributes: TextAttributes.DIM,
+                            }}
+                          >
+                            {slug}
+                          </text>
+                        </box>
+                      )}
+                    </box>
+                  </box>
+                );
+              }}
+            </For>
           </box>
-        )}
-      </box>
-    </scrollbox>
+
+          {/* ── 空状态 ── */}
+          {props.posts.length === 0 && (
+            <box
+              style={{
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 4,
+              }}
+            >
+              <text style={{ fg: theme.textMuted }}>暂无文章</text>
+            </box>
+          )}
+        </box>
+      </scrollbox>
+    </box>
   );
 }

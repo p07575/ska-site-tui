@@ -5,6 +5,7 @@ import { SyntaxStyle, parseColor } from "@opentui/core";
 import { useTheme } from "../context/ThemeContext";
 import { generateSyntax } from "../theme";
 import { useFocusGroup } from "../context/FocusContext";
+import { fastScroll } from "../lib/scroll-accel";
 
 type PostDetailProps = {
   post: ListedPostVo;
@@ -82,6 +83,7 @@ export default function PostDetail(props: PostDetailProps) {
   return (
     <scrollbox
       ref={scrollRef}
+      scrollAcceleration={fastScroll}
       style={{
         flexGrow: 1,
         flexShrink: 1,

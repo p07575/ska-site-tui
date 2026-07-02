@@ -5,10 +5,12 @@ import { usePostContext } from "../context/PostContext";
 import { AIChat } from "./AIChat";
 import { formatDate } from "../lib/date";
 import { useSession } from "../context/SessionContext";
+import { useFocusGroup } from "../context/FocusContext";
 export function Sidebar({ width }: { width: number | `${number}%` }) {
   const { theme } = useTheme();
   const { showPost, setShowPost } = usePostContext();
   const session = useSession();
+  const { isActive } = useFocusGroup("sidebar");
   return (
     <box
       style={{
@@ -23,36 +25,6 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
         padding: 0,
       }}
     >
-      <box
-        style={{
-          marginBottom: 0,
-          paddingBottom: 0,
-          // backgroundColor: "#b91007",
-          flexDirection: "row",
-          justifyContent: "flex-start",
-          gap: 2,
-          width: "100%",
-          // border: ["bottom"],
-          flexShrink: 0,
-        }}
-      >
-        <text
-          onMouseDown={() => {
-            if (showPost() == null) {
-              session.endSession();
-              return;
-            }
-            setShowPost(null);
-          }}
-        >
-          {showPost() == null ? "[断开连接]" : "[返回首页]"}
-        </text>
-        <text bg="#ffb86c" fg="#000000">
-          {"1"}
-        </text>
-        <text>{"2"}</text>
-        <text>{"3"}</text>
-      </box>
       <box
         style={{
           border: true,
@@ -77,9 +49,10 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
       <box
         style={{
           border: true,
+          borderColor: isActive() ? "#58A6FF" : theme.text,
         }}
         title=" AI Chat "
-        titleColor="#58A6FF"
+        titleColor={isActive() ? "#58A6FF" : "#58A6FF"}
         flexShrink={1}
       >
         <AIChat />
