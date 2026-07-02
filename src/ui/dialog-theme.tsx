@@ -5,41 +5,41 @@ import { useKeyboard, useTerminalDimensions } from "@opentui/solid";
 import { useTheme } from "../context/ThemeContext";
 import { useDialog, type DialogContext } from "./dialog";
 
-type FocusTarget = "mode" | "select";
+type FocusTarget = "select"; // "mode" | "select" — mode toggle disabled
 
 export function ThemeDialog() {
   const dialog = useDialog();
   const { theme, selected, all, set, mode, setMode } = useTheme();
   const dimensions = useTerminalDimensions();
   const initialTheme = selected();
-  const initialMode = mode();
+  // const initialMode = mode(); // mode toggle disabled
   let confirmed = false;
 
   // Focus management: Tab cycles between "mode" and "select"
   const [focusTarget, setFocusTarget] = createSignal<FocusTarget>("select");
 
   useKeyboard((key) => {
-    if (key.name === "tab") {
-      // Shift+Tab goes backwards, Tab goes forwards
-      setFocusTarget((prev) => (prev === "mode" ? "select" : "mode"));
-      return;
-    }
+    // Mode toggle disabled — Tab no longer cycles
+    // if (key.name === "tab") {
+    //   setFocusTarget((prev) => (prev === "mode" ? "select" : "mode"));
+    //   return;
+    // }
     // When focus is on mode toggle, handle left/right to switch
-    if (focusTarget() === "mode") {
-      if (key.name === "left" || key.name === "right") {
-        setMode(mode() === "dark" ? "light" : "dark");
-      } else if (key.name === "enter" || key.name === "return") {
-        confirmed = true;
-        dialog.clear();
-      }
-    }
+    // if (focusTarget() === "mode") {
+    //   if (key.name === "left" || key.name === "right") {
+    //     setMode(mode() === "dark" ? "light" : "dark");
+    //   } else if (key.name === "enter" || key.name === "return") {
+    //     confirmed = true;
+    //     dialog.clear();
+    //   }
+    // }
   });
 
   // Restore original theme on Esc (component cleanup without confirmation)
   onCleanup(() => {
     if (!confirmed) {
       set(initialTheme);
-      setMode(initialMode);
+      // setMode(initialMode); // mode toggle disabled
     }
   });
 
@@ -77,8 +77,8 @@ export function ThemeDialog() {
     }
   };
 
-  const isDark = () => mode() === "dark";
-  const isModeFocused = () => focusTarget() === "mode";
+  // const isDark = () => mode() === "dark"; // mode toggle disabled
+  // const isModeFocused = () => focusTarget() === "mode"; // mode toggle disabled
 
   return (
     <box
@@ -136,7 +136,7 @@ export function ThemeDialog() {
           onSelect={handleConfirm}
         />
       </box>
-      {/* Dark/Light mode toggle */}
+      {/* Dark/Light mode toggle — disabled
       <box
         flexDirection="column"
         border={true}
@@ -170,10 +170,11 @@ export function ThemeDialog() {
           </text>
         </box>
       </box>
+      */}
 
       {/* Keyboard hints */}
       <text fg={theme.textMuted}>
-        Tab 切换区域 | ←→ 切换模式 | ↑↓ 选择主题 | Enter 确认 | Esc 关闭
+        ↑↓ 选择主题 | Enter 确认 | Esc 关闭
       </text>
     </box>
   );
