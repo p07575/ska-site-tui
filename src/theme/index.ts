@@ -22,7 +22,6 @@ import nightowl from "./assets/nightowl.json" with { type: "json" }
 import nord from "./assets/nord.json" with { type: "json" }
 import onedark from "./assets/one-dark.json" with { type: "json" }
 import opencode from "./assets/opencode.json" with { type: "json" }
-import orng from "./assets/orng.json" with { type: "json" }
 import osakaJade from "./assets/osaka-jade.json" with { type: "json" }
 import palenight from "./assets/palenight.json" with { type: "json" }
 import rosepine from "./assets/rosepine.json" with { type: "json" }
@@ -32,7 +31,6 @@ import tokyonight from "./assets/tokyonight.json" with { type: "json" }
 import trans from "./assets/trans.json" with { type: "json" }
 import vercel from "./assets/vercel.json" with { type: "json" }
 import vesper from "./assets/vesper.json" with { type: "json" }
-import zenburn from "./assets/zenburn.json" with { type: "json" }
 
 export type Theme = {
   readonly primary: RGBA
@@ -147,21 +145,17 @@ export const DEFAULT_THEMES: Record<string, ThemeJson> = {
   mercury,
   monokai,
   nightowl,
-  nord,
   ["one-dark"]: onedark,
   ["osaka-jade"]: osakaJade,
   opencode,
-  orng,
   ["lucent-orng"]: lucentOrng,
   palenight,
   rosepine,
-  solarized,
   synthwave84,
   tokyonight,
   trans,
   vesper,
   vercel,
-  zenburn,
   carbonfox,
 }
 

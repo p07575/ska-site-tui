@@ -13,11 +13,14 @@ import PostDetail from "./PostDetail";
 import { useChat } from "../context/ChatContext";
 import { usePostContext } from "../context/PostContext";
 import { postToMarkdown } from "../lib/postToMarkdown";
+import { useSession } from "../context/SessionContext";
+import { TextAttributes } from "@opentui/core";
 
 export function MainContent() {
   const { theme } = useTheme();
   const chat = useChat();
   const { showPost, setShowPost } = usePostContext();
+  const session = useSession();
 
   const [posts] = createResource(async () => {
     return await queryPosts({ page: 1, size: undefined });
@@ -74,6 +77,48 @@ export function MainContent() {
         // backgroundColor: "#ffffff",
       }}
     >
+      {/* ── 列表头 ── */}
+      <box
+        style={{
+          width: "100%",
+
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingBottom: 1,
+          paddingX: 3,
+        }}
+      >
+        <text
+          onMouseDown={() => {
+            if (showPost() == null) {
+              session.endSession();
+              return;
+            }
+            setShowPost(null);
+          }}
+        >
+          {showPost() == null ? "[ESC] 断开连接" : "[ESC] 返回首页"}
+        </text>
+        <Show when={showPost() == null}>
+          <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}>
+            ✦ 文章列表
+          </text>
+        </Show>
+        <Show when={showPost() == null}>
+          <text style={{ fg: theme.textMuted }}>
+            共 {posts()?.total ?? 0} 篇
+          </text>
+        </Show>
+        <Show when={showPost() != null}>
+          <text>
+            {(showPost()?.spec?.title ?? "Untitled").slice(0, 20)}
+            {(showPost()?.spec?.title ?? "").length > 20 ? "…" : ""}
+          </text>
+        </Show>
+
+        <text>{"[Ctrl+T] 主题切换"}</text>
+      </box>
       <Show when={showPost() != null}>
         <PostDetail
           handleClose={handleClosePost}
@@ -81,70 +126,34 @@ export function MainContent() {
         />
       </Show>
       <Show when={showPost() == null}>
-        <box zIndex={0}>
-          <scrollbox
-            style={{
-              flexGrow: 0,
-              flexShrink: 1,
-              height: "100%",
-              flexDirection: "row",
-              backgroundColor: theme.background,
-              // backgroundColor: "#b91007",
-
-              margin: 0,
-              padding: 1,
-              paddingTop: 0,
-              scrollY: true,
-            }}
-            zIndex={0}
-            // wrapperOptions={{
-            //   flexGrow: 0,
-            // }}
-            // rootOptions={{
-            //   flexGrow: 0,
-            // }}
-            contentOptions={{
-              flexGrow: 0,
-              minWidth: "0%", //这行关掉scrollbox内部的自动撑满行为
-            }}
-            verticalScrollbarOptions={{
-              trackOptions: {
-                foregroundColor: "transparent",
-                backgroundColor: "transparent",
-              },
-            }}
+        {/* 3. 优先处理错误状态 */}
+        <Show
+          when={!posts.error}
+          fallback={
+            <text style={{ fg: theme.error || "#ff5555" }}>
+              {" "}
+              加载失败: {posts.error()?.message || "未知网络错误"}
+            </text>
+          }
+        >
+          {/* 4. 处理正常加载与数据渲染 */}
+          <Show
+            when={!posts.loading && posts()}
+            fallback={
+              <text style={{ fg: theme.textMuted }}>
+                {" "}
+                正在从 Halo 读取文章列表中...
+              </text>
+            }
           >
-            {/* 3. 优先处理错误状态 */}
-            <Show
-              when={!posts.error}
-              fallback={
-                <text style={{ fg: theme.error || "#ff5555" }}>
-                  {" "}
-                  加载失败: {posts.error()?.message || "未知网络错误"}
-                </text>
-              }
-            >
-              {/* 4. 处理正常加载与数据渲染 */}
-              <Show
-                when={!posts.loading && posts()}
-                fallback={
-                  <text style={{ fg: theme.textMuted }}>
-                    {" "}
-                    正在从 Halo 读取文章列表中...
-                  </text>
-                }
-              >
-                {(data) => (
-                  <PostList
-                    posts={data().items ?? []}
-                    total={data().total ?? 0}
-                    enterPost={handlePostClick}
-                  />
-                )}
-              </Show>
-            </Show>
-          </scrollbox>
-        </box>
+            {(data) => (
+              <PostList
+                posts={data().items ?? []}
+                enterPost={handlePostClick}
+              />
+            )}
+          </Show>
+        </Show>
       </Show>
     </box>
   );

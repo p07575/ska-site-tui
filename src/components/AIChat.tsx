@@ -6,7 +6,8 @@ import {
   createMarkdownCodeBlockRenderer,
   parseColor,
 } from "@opentui/core";
-import { createSignal, createEffect } from "solid-js";
+import { createSignal, createEffect, onMount } from "solid-js";
+import { useFocusGroup, useFocusManager } from "../context/FocusContext";
 import { useRenderer } from "@opentui/solid";
 import { createToolStatusRenderer } from "../ui/tool-status";
 import { generateSubtleSyntax } from "../theme";
@@ -55,9 +56,17 @@ const syntaxStyle = SyntaxStyle.fromStyles({
 export function AIChat() {
   const { theme } = useTheme();
   const { markdownContent, isStreaming, sendMessage } = useChat();
+  const { registerItem } = useFocusGroup("sidebar");
+  const { activateGroup } = useFocusManager();
   const [inputValue, setInputValue] = createSignal("");
   let scrollRef: any = null;
+  let inputRef: any = null;
   const renderer = useRenderer();
+
+  // 将输入框注册到 sidebar 焦点组，Tab 切换时自动聚焦
+  onMount(() => {
+    if (inputRef) registerItem(inputRef);
+  });
 
   createEffect(() => {
     markdownContent();
@@ -73,6 +82,11 @@ export function AIChat() {
     if (!text.trim()) return;
     sendMessage(text);
     setInputValue("");
+  }
+
+  function handleInput(value: string) {
+    activateGroup("sidebar");
+    setInputValue(value);
   }
 
   return (
@@ -122,11 +136,23 @@ export function AIChat() {
           // syntaxStyle={generateSubtleSyntax(theme)}
           streaming={isStreaming()}
           conceal={true}
-          tableOptions={{ widthMode: "content" }}
           internalBlockMode="top-level"
           // renderNode={createMarkdownCodeBlockRenderer({
           //   taskflow: createToolStatusRenderer(renderer),
           // })}
+          // tableOptions={{ widthMode: "content" }}
+          tableOptions={{
+            style: "grid",
+            widthMode: "content",
+            columnFitter: "balanced",
+            wrapMode: "word",
+            cellPadding: 0,
+            borders: true,
+            outerBorder: true,
+            borderStyle: "single",
+            borderColor: theme.text,
+            selectable: true,
+          }}
         />
       </scrollbox>
 
@@ -140,10 +166,16 @@ export function AIChat() {
           paddingRight: 1,
           flexShrink: 0,
         }}
+        onMouse={(e) => {
+          if (e.type === "down" && e.button === 0) {
+            activateGroup("sidebar");
+          }
+        }}
       >
         <input
+          ref={(el) => (inputRef = el)}
           value={inputValue()}
-          onInput={setInputValue}
+          onInput={handleInput as any}
           onSubmit={handleSubmit as any}
           placeholder={
             isStreaming() ? "AI 正在回复..." : "输入消息 (Enter 发送)"
