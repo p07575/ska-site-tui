@@ -173,9 +173,8 @@ export function ThemeDialog() {
       */}
 
       {/* Keyboard hints */}
-      <text fg={theme.textMuted}>
-        ↑↓ 选择主题 | Enter 确认 | Esc 关闭
-      </text>
+      <text >↑↓ 选择主题 | Enter 确认 | Esc 关闭</text>
+      <text fg={theme.textMuted}>(opentui库有bug，弹窗看不到后面的utf8文本，见谅~)</text>
     </box>
   );
 }

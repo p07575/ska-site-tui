@@ -20,7 +20,6 @@ import { usePostContext } from "../context/PostContext";
 
 interface PostListProps {
   posts: ListedPostVo[];
-  total: number;
   enterPost: (post: ListedPostVo) => void;
 }
 
@@ -125,34 +124,6 @@ export function PostList(props: PostListProps) {
 
   return (
     <box>
-      {/* ── 列表头 ── */}
-      <box
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingLeft: 1,
-          paddingRight: 1,
-          paddingBottom: 1,
-        }}
-      >
-        <text
-          onMouseDown={() => {
-            if (showPost() == null) {
-              session.endSession();
-              return;
-            }
-            setShowPost(null);
-          }}
-        >
-          {showPost() == null ? "[ESC] 断开连接" : "[ESC] 返回首页"}
-        </text>
-        <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}>
-          ✦ 文章列表
-        </text>
-        <text style={{ fg: theme.textMuted }}>共 {props.total} 篇</text>
-        <text>{"[Ctrl+T] 主题切换"}</text>
-      </box>
       <scrollbox
         ref={(r) => (scrollboxRef = r)}
         scrollAcceleration={fastScroll}
