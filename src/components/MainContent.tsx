@@ -74,35 +74,6 @@ export function MainContent() {
         // backgroundColor: "#ffffff",
       }}
     >
-      <box
-        style={{
-          marginBottom: 0,
-          paddingBottom: 0,
-          // backgroundColor: "#b91007",
-          flexDirection: "row",
-          justifyContent: "flex-start",
-          gap: 2,
-          width: "100%",
-          // border: ["bottom"],
-          flexShrink: 0,
-          flexGrow: 0,
-          zIndex: 100,
-        }}
-      >
-        <text
-          onMouseDown={() => {
-            setShowPost(null);
-          }}
-          zIndex={100}
-        >
-          {"[RETURN]"}
-        </text>
-        <text bg="#ffb86c" fg="#000000">
-          {"1"}
-        </text>
-        <text>{"2"}</text>
-        <text>{"3"}</text>
-      </box>
       <Show when={showPost() != null}>
         <PostDetail
           handleClose={handleClosePost}

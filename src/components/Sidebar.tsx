@@ -5,7 +5,6 @@ import { usePostContext } from "../context/PostContext";
 import { AIChat } from "./AIChat";
 import { formatDate } from "../lib/date";
 import { useSession } from "../context/SessionContext";
-
 export function Sidebar({ width }: { width: number | `${number}%` }) {
   const { theme } = useTheme();
   const { showPost, setShowPost } = usePostContext();
@@ -39,10 +38,14 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
       >
         <text
           onMouseDown={() => {
+            if (showPost() == null) {
+              session.endSession();
+              return;
+            }
             setShowPost(null);
           }}
         >
-          {"[RETURN]"}
+          {showPost() == null ? "[断开连接]" : "[返回首页]"}
         </text>
         <text bg="#ffb86c" fg="#000000">
           {"1"}

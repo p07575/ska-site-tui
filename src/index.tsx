@@ -125,13 +125,15 @@ function AppContent({ name }: { name: string }) {
 function App({
   name,
   sessionInfo,
+  endSession,
 }: {
   name: string;
   sessionInfo: import("./context/SessionContext").SessionInfo;
+  endSession: () => void;
 }) {
   return (
     <ThemeProvider>
-      <SessionProvider session={sessionInfo}>
+      <SessionProvider session={sessionInfo} endSession={endSession}>
         <ChatProvider>
           <PostProvider>
             <DialogProvider>
@@ -180,12 +182,10 @@ const server = createServer({
     setSessionStore("rows", height);
   });
   render(
-    () => <App name={session.identity.username} sessionInfo={sessionStore} />,
+    () => <App name={session.identity.username} sessionInfo={sessionStore} endSession={() => session.end()} />,
     session.renderer,
   );
-  session.renderer.keyInput.on("keypress", (key) => {
-    if (key.name === "q" || (key.ctrl && key.name === "c")) session.end();
-  });
+
   session.onClose(() => {});
 });
 

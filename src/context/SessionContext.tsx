@@ -12,17 +12,25 @@ export interface SessionInfo {
   hasPty: boolean
 }
 
-const SessionContext = createContext<SessionInfo>()
+export interface SessionContextValue extends SessionInfo {
+  endSession: () => void
+}
 
-export function SessionProvider(props: ParentProps & { session: SessionInfo }) {
+const SessionContext = createContext<SessionContextValue>()
+
+export function SessionProvider(
+  props: ParentProps & { session: SessionInfo; endSession: () => void },
+) {
   return (
-    <SessionContext.Provider value={props.session}>
+    <SessionContext.Provider
+      value={{ ...props.session, endSession: props.endSession }}
+    >
       {props.children}
     </SessionContext.Provider>
   )
 }
 
-export function useSession(): SessionInfo {
+export function useSession(): SessionContextValue {
   const value = useContext(SessionContext)
   if (!value) {
     throw new Error("useSession must be used within a SessionProvider")

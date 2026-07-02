@@ -6,38 +6,23 @@ import type { ListedPostVoList } from "./types";
 // ── 工具定义 ────────────────────────────────────────────────────────
 
 /**
- * 查询文章列表工具
+ * 查询文章列表工具（无参数，直接返回全部文章）
  */
 export const queryPostsTool = tool({
   description:
-    "查询 ska 博客的文章列表，支持分页和筛选。当用户想要浏览文章列表、查看最新文章、或按标签/分类筛选文章时使用此工具。当用户需要查找一篇你不知道name（UUID）的文章的时候，你需要先使用此工具查询文章列表，获取文章的 name（UUID），然后再用 queryPostByName 查询详情。如果你已经知道用户阅读的文章的name（UUID），请直接使用 queryPostByName 工具查询文章详情，而不是使用此工具。",
-  inputSchema: z.object({
-    page: z.number().optional().default(1).describe("页码，从1开始"),
-    size: z.number().optional().default(50).describe("每页数量，默认50条,推荐传入50"),
-    labelSelector: z
-      .array(z.string())
-      .optional()
-      .describe("标签筛选，例如 ['tag1', 'tag2']"),
-    sort: z
-      .array(z.string())
-      .optional()
-      .describe("排序方式，例如 ['metadata.creationTimestamp,desc']"),
-  }),
-  execute: async (params) => {
+    "查询 ska 博客的全部文章列表。当用户想要浏览文章列表、查看最新文章时使用此工具。返回结果中包含每篇文章的 name（UUID）和 title，如果需要查看某篇文章的详细内容，请使用 queryPostByName 工具并传入对应的 name。",
+  inputSchema: z.object({}),
+  execute: async () => {
     try {
       const result = await queryPosts({
-        page: params.page,
-        size: params.size,
-        labelSelector: params.labelSelector,
-        sort: params.sort,
+        page: 1,
+        size: 1000,
+        sort: ["metadata.creationTimestamp,desc"],
       });
       return {
         success: true,
         data: {
           total: result.total,
-          page: result.page,
-          size: result.size,
-          totalPages: result.totalPages,
           items: result.items.map((item) => ({
             name: item.metadata.name,
             title: item.spec.title,
@@ -123,7 +108,7 @@ export const queryPostsTool = tool({
  */
 export const queryPostByNameTool = tool({
   description:
-    "根据文章的 metadata.name（UUID 格式，如 019edc19-47fe-713a-a9f9-c85f4c5581f2）查询单篇文章的完整信息。注意：此参数不是文章标题！必须先用 searchPostByTitle 搜索获取 name，再调用此工具。",
+    "根据文章的 metadata.name（UUID 格式，如 019edc19-47fe-713a-a9f9-c85f4c5581f2）查询单篇文章的完整信息。注意：此参数是文章的 name（UUID），不是文章标题！请先用 queryPosts 获取文章列表，从中找到对应的 name 后再调用此工具。",
   inputSchema: z.object({
     name: z.string().describe("文章的 metadata.name，必须是 UUID 格式，如 019edc19-47fe-713a-a9f9-c85f4c5581f2，绝对不是文章标题"),
   }),
