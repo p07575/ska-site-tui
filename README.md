@@ -12,9 +12,11 @@
 
 </div>
 
-<p align="center">
-  <video src="https://raw.githubusercontent.com/sAkuraOfficial/ska-site-tui/master/docs/demo.mp4" controls loop muted playsinline width="640"></video>
-</p>
+
+
+https://github.com/user-attachments/assets/2b6283c4-a1fd-42d4-b4c7-f276a1d8579b
+
+
 
 ## 快速开始
 
