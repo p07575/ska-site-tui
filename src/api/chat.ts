@@ -167,10 +167,11 @@ export async function streamChat(
           // console.log(`[ska] Tool called: ${part.toolName}`, JSON.stringify(part.input));
           continue; // 忽略记忆工具的调用日志，避免泄露用户隐私
         }
-        let chunk=`
-\n\n> **Tool Call:** 调用工具 ${part.toolName}\n\`${JSON.stringify(part.input)}\` \n\n
-        `;
-        callbacks.onChunk(chunk);
+// 优化体验，不打印调用，只打印下面那个工具结果，会更好看
+//         let chunk=`
+// \n\n> **Tool Call:** 调用工具 ${part.toolName}\n\`${JSON.stringify(part.input)}\` \n\n
+//         `;
+//         callbacks.onChunk(chunk);
       } else if (part.type === "tool-result") {
         if(part.toolName==="recall" || part.toolName==="reflect" || part.toolName==="retain" || part.toolName==="getMentalModel" || part.toolName==="getDocument"){
           // console.log(`[ska] Tool result: ${JSON.stringify(part.output, null, 2)}`);

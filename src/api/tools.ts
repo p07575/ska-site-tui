@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { queryPosts, queryPostByName } from "./client";
+import { getAdapter } from "./adapters";
 import type { ListedPostVoList } from "./types";
 
 // ── 工具定义 ────────────────────────────────────────────────────────
@@ -14,10 +14,10 @@ export const queryPostsTool = tool({
   inputSchema: z.object({}),
   execute: async () => {
     try {
-      const result = await queryPosts({
+      const adapter = getAdapter("master");
+      const result = await adapter.queryPosts({
         page: 1,
         size: 1000,
-        sort: ["metadata.creationTimestamp,desc"],
       });
       return {
         success: true,
@@ -114,7 +114,8 @@ export const queryPostByNameTool = tool({
   }),
   execute: async (params) => {
     try {
-      const post = await queryPostByName(params.name);
+      const adapter = getAdapter("master");
+      const post = await adapter.queryPostByName(params.name);
       return {
         success: true,
         data: {

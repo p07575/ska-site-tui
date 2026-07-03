@@ -2,7 +2,7 @@ import TurndownService from "turndown";
 // @ts-ignore 如果插件没有自带类型声明，可以用 ts-ignore 或自行声明
 import { gfm } from "turndown-plugin-gfm";
 import type { ListedPostVo } from "../api/types";
-import { queryPostByName } from "../api/client";
+import { getAdapter } from "../api/adapters";
 
 // 1. 初始化 Turndown 实例
 const turndownService = new TurndownService({
@@ -34,11 +34,12 @@ turndownService.addRule("fencedCodeBlock", {
   },
 });
 
-export async function postToMarkdown(post: ListedPostVo): Promise<string> {
-  const detail = await queryPostByName(post.metadata.name);
+export async function postToMarkdown(post: ListedPostVo, sourceId: string = "master"): Promise<string> {
+  const adapter = getAdapter(sourceId);
+  const detail = await adapter.queryPostByName(post.metadata.name);
   const htmlContent = detail.content?.content;
   if (!htmlContent) {
-    return ""; // 如果没有内容，返回空字符串
+    return "";
   }
   const markdown = turndownService.turndown(htmlContent);
   return markdown;

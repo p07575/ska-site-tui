@@ -2,7 +2,7 @@
 import { createResource, createEffect, Show } from "solid-js";
 import { useTheme } from "../context/ThemeContext";
 import { PostList } from "./PostList";
-import { queryPosts } from "../api/client";
+import { getAdapter } from "../api/adapters";
 import { GifPlayer } from "./GifPlayer";
 // @ts-ignore
 import gifSrc from "../assets/doro.gif" with { type: "image/gif" };
@@ -19,19 +19,23 @@ import { TextAttributes } from "@opentui/core";
 export function MainContent() {
   const { theme } = useTheme();
   const chat = useChat();
-  const { showPost, setShowPost } = usePostContext();
+  const { currentSource, showPost, setShowPost } = usePostContext();
   const session = useSession();
 
-  const [posts] = createResource(async () => {
-    return await queryPosts({ page: 1, size: undefined });
-  });
+  const [posts] = createResource(
+    () => currentSource(),
+    async (sourceId) => {
+      const adapter = getAdapter(sourceId);
+      return adapter.queryPosts({ page: 1, size: undefined });
+    }
+  );
 
   // 当 showPost 变化时，更新 AI 上下文
   createEffect(() => {
     const post = showPost();
     if (post) {
       // 进入文章 → 异步获取文章 markdown 内容作为上下文
-      postToMarkdown(post).then((md) => {
+      postToMarkdown(post, currentSource()).then((md) => {
         const title = post.spec?.title ?? "Untitled";
         chat.setContext(
           `post:${post.metadata.name}`,
@@ -123,6 +127,7 @@ export function MainContent() {
         <PostDetail
           handleClose={handleClosePost}
           post={showPost() as ListedPostVo}
+          sourceId={currentSource()}
         />
       </Show>
       <Show when={showPost() == null}>
@@ -132,7 +137,7 @@ export function MainContent() {
           fallback={
             <text style={{ fg: theme.error || "#ff5555" }}>
               {" "}
-              加载失败: {posts.error()?.message || "未知网络错误"}
+              加载失败: {posts.error?.message || "未知网络错误"}
             </text>
           }
         >

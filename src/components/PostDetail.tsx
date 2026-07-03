@@ -10,6 +10,7 @@ import { fastScroll } from "../lib/scroll-accel";
 type PostDetailProps = {
   post: ListedPostVo;
   handleClose: () => void;
+  sourceId?: string;
 };
 
 export default function PostDetail(props: PostDetailProps) {
@@ -19,7 +20,7 @@ export default function PostDetail(props: PostDetailProps) {
   let scrollRef: any = null;
 
   const [markdown] = createResource<string>(async () => {
-    var sb = await postToMarkdown(post);
+    var sb = await postToMarkdown(post, props.sourceId);
     // console.log("markdown:", sb);
     return sb;
   });

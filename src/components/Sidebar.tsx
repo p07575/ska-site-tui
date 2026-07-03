@@ -6,10 +6,12 @@ import { AIChat } from "./AIChat";
 import { formatDate } from "../lib/date";
 import { useSession } from "../context/SessionContext";
 import { useFocusGroup } from "../context/FocusContext";
+import { getBlogSourceList } from "../api/adapters";
 export function Sidebar({ width }: { width: number | `${number}%` }) {
   const { theme } = useTheme();
-  const { showPost, setShowPost } = usePostContext();
+  const { currentSource, setCurrentSource, showPost, setShowPost } = usePostContext();
   const session = useSession();
+  const blogSources = getBlogSourceList();
   const { isActive } = useFocusGroup("sidebar");
   return (
     <box
@@ -45,6 +47,30 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
           <text>当前位置：首页</text>
           <text>当前用户：{session.username}</text>
         </Show>
+      </box>
+      <box
+        style={{
+          border: true,
+        }}
+        title=" 友链 "
+        titleColor="#5cb66b"
+        flexShrink={0}
+        paddingX={1}
+      >
+        {blogSources.map((source) => (
+          <text
+            style={{
+              alignSelf: "center",
+              fg: currentSource() === source.id ? "#5cb66b" : theme.text,
+            }}
+            onMouseDown={() => {
+              setCurrentSource(source.id);
+              setShowPost(null);
+            }}
+          >
+            {currentSource() === source.id ? `▸ ${source.name}` : source.name}
+          </text>
+        ))}
       </box>
       <box
         style={{

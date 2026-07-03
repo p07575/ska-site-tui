@@ -3,6 +3,8 @@ import { createContext, useContext, createSignal, type JSX } from "solid-js";
 import type { ListedPostVo } from "../api/types";
 
 interface PostContextValue {
+  currentSource: () => string;
+  setCurrentSource: (id: string) => void;
   showPost: () => ListedPostVo | null;
   setShowPost: (post: ListedPostVo | null) => void;
 }
@@ -10,10 +12,11 @@ interface PostContextValue {
 const PostContext = createContext<PostContextValue>();
 
 export function PostProvider(props: { children: JSX.Element }) {
+  const [currentSource, setCurrentSource] = createSignal<string>("master");
   const [showPost, setShowPost] = createSignal<ListedPostVo | null>(null);
 
   return (
-    <PostContext.Provider value={{ showPost, setShowPost }}>
+    <PostContext.Provider value={{ currentSource, setCurrentSource, showPost, setShowPost }}>
       {props.children}
     </PostContext.Provider>
   );
