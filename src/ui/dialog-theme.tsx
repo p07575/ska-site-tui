@@ -3,12 +3,14 @@ import { TextAttributes, type SelectOption } from "@opentui/core";
 import { createMemo, createSignal, onCleanup } from "solid-js";
 import { useKeyboard, useTerminalDimensions } from "@opentui/solid";
 import { useTheme } from "../context/ThemeContext";
+import { useI18n } from "../i18n";
 import { useDialog, type DialogContext } from "./dialog";
 
 type FocusTarget = "select"; // "mode" | "select" — mode toggle disabled
 
 export function ThemeDialog() {
   const dialog = useDialog();
+  const { t } = useI18n();
   const { theme, selected, all, set, mode, setMode } = useTheme();
   const dimensions = useTerminalDimensions();
   const initialTheme = selected();
@@ -93,7 +95,7 @@ export function ThemeDialog() {
       {/* Title */}
       <box flexDirection="row" justifyContent="space-between">
         <text attributes={TextAttributes.BOLD} fg={theme.text}>
-          选择主题
+          {t("theme.title")}
         </text>
         <text fg={theme.textMuted} onMouseUp={() => dialog.clear()}>
           esc
@@ -173,8 +175,8 @@ export function ThemeDialog() {
       */}
 
       {/* Keyboard hints */}
-      <text >↑↓ 选择主题 | Enter 确认 | Esc 关闭</text>
-      <text fg={theme.textMuted}>(opentui库有bug，弹窗看不到后面的utf8文本，见谅~)</text>
+      <text>{t("theme.hint")}</text>
+      <text fg={theme.textMuted}>{t("theme.bugNote")}</text>
     </box>
   );
 }

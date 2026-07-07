@@ -11,6 +11,7 @@ import { useFocusGroup, useFocusManager } from "../context/FocusContext";
 import { useRenderer } from "@opentui/solid";
 import { createToolStatusRenderer } from "../ui/tool-status";
 import { generateSubtleSyntax } from "../theme";
+import { useI18n } from "../i18n";
 
 const syntaxStyle = SyntaxStyle.fromStyles({
   keyword: { fg: parseColor("#FF7B72"), bold: true },
@@ -55,6 +56,7 @@ const syntaxStyle = SyntaxStyle.fromStyles({
 
 export function AIChat() {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const { markdownContent, isStreaming, sendMessage } = useChat();
   const { registerItem } = useFocusGroup("sidebar");
   const { activateGroup } = useFocusManager();
@@ -131,7 +133,7 @@ export function AIChat() {
         }}
       >
         <markdown
-          content={markdownContent() || "_输入消息开始对话..._"}
+          content={markdownContent() || t("chat.startHint")}
           syntaxStyle={syntaxStyle}
           // syntaxStyle={generateSubtleSyntax(theme)}
           streaming={isStreaming()}
@@ -178,7 +180,7 @@ export function AIChat() {
           onInput={handleInput as any}
           onSubmit={handleSubmit as any}
           placeholder={
-            isStreaming() ? "AI 正在回复..." : "输入消息 (Enter 发送)"
+            isStreaming() ? t("chat.replying") : t("chat.inputPlaceholder")
           }
         />
         <box
@@ -189,7 +191,7 @@ export function AIChat() {
           }}
         >
           <text
-            content={isStreaming() ? "⏹ Esc 停止" : "⏎ Enter 发送"}
+            content={isStreaming() ? t("chat.stop") : t("chat.send")}
             fg="#6E7681"
           />
         </box>

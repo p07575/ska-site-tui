@@ -9,16 +9,16 @@ export function DialogDemo() {
   const { theme } = useTheme()
 
   const handleConfirm = async () => {
-    const result = await DialogConfirm.show(dialog, "确认操作", "你确定要执行此操作吗？")
+    const result = await DialogConfirm.show(dialog, "Confirm action", "Are you sure you want to do this?")
     if (result === true) {
-      await DialogAlert.show(dialog, "成功", "操作已确认执行")
+      await DialogAlert.show(dialog, "Success", "The action was confirmed")
     } else if (result === false) {
-      await DialogAlert.show(dialog, "取消", "操作已取消")
+      await DialogAlert.show(dialog, "Cancelled", "The action was cancelled")
     }
   }
 
   const handleAlert = async () => {
-    await DialogAlert.show(dialog, "提示", "这是一个提示信息")
+    await DialogAlert.show(dialog, "Notice", "This is a notice message")
   }
 
   return (
@@ -29,7 +29,7 @@ export function DialogDemo() {
         backgroundColor={theme.primary}
         onMouseUp={handleConfirm}
       >
-        <text fg={theme.selectedListItemText}>确认对话框</text>
+        <text fg={theme.selectedListItemText}>Confirm dialog</text>
       </box>
       <box
         paddingLeft={1}
@@ -37,7 +37,7 @@ export function DialogDemo() {
         backgroundColor={theme.accent}
         onMouseUp={handleAlert}
       >
-        <text fg={theme.selectedListItemText}>提示对话框</text>
+        <text fg={theme.selectedListItemText}>Alert dialog</text>
       </box>
     </box>
   )

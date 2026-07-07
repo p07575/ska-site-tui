@@ -17,6 +17,7 @@ import { formatDate } from "../lib/date";
 import { fastScroll } from "../lib/scroll-accel";
 import { useSession } from "../context/SessionContext";
 import { usePostContext } from "../context/PostContext";
+import { useI18n } from "../i18n";
 
 interface PostListProps {
   posts: ListedPostVo[];
@@ -39,6 +40,7 @@ function formatTime(dateStr?: string): string {
 
 export function PostList(props: PostListProps) {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const renderer = useRenderer();
   const dialog = useDialog();
   const { focusedIndex, setFocusedIndex, isActive } = useFocusGroup("main");
@@ -162,9 +164,11 @@ export function PostList(props: PostListProps) {
           <box style={{ flexDirection: "column", gap: 1 }}>
             <For each={props.posts}>
               {(post, index) => {
-                const title = post.spec?.title ?? "无标题";
-                const author =
-                  post.owner?.displayName || post.owner?.name || "匿名";
+                const title = () => post.spec?.title ?? t("post.untitled");
+                const author = () =>
+                  post.owner?.displayName ||
+                  post.owner?.name ||
+                  t("post.anonymous");
                 const publishTime = post.spec?.publishTime;
                 const slug = post.metadata?.name ?? "";
 
@@ -248,7 +252,7 @@ export function PostList(props: PostListProps) {
                             attributes: TextAttributes.BOLD,
                           }}
                         >
-                          {title}
+                          {title()}
                         </text>
                       </box>
 
@@ -257,7 +261,7 @@ export function PostList(props: PostListProps) {
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
                         <text style={{ fg: theme.primary }}>✎ </text>
-                        <text style={{ fg: theme.textMuted }}>{author}</text>
+                        <text style={{ fg: theme.textMuted }}>{author()}</text>
                         {publishTime && (
                           <>
                             <text style={{ fg: theme.borderSubtle }}> │ </text>
@@ -307,7 +311,7 @@ export function PostList(props: PostListProps) {
                 padding: 4,
               }}
             >
-              <text style={{ fg: theme.textMuted }}>暂无文章</text>
+              <text style={{ fg: theme.textMuted }}>{t("posts.empty")}</text>
             </box>
           )}
         </box>

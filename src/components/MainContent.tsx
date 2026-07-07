@@ -14,10 +14,12 @@ import { useChat } from "../context/ChatContext";
 import { usePostContext } from "../context/PostContext";
 import { postToMarkdown } from "../lib/postToMarkdown";
 import { useSession } from "../context/SessionContext";
+import { useI18n } from "../i18n";
 import { TextAttributes } from "@opentui/core";
 
 export function MainContent() {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const chat = useChat();
   const { currentSource, showPost, setShowPost } = usePostContext();
   const session = useSession();
@@ -38,10 +40,10 @@ export function MainContent() {
       postToMarkdown(post, sourceId).then((md) => {
         // 切源或关文后，忽略过期的结果
         if (currentSource() !== sourceId || showPost()?.metadata.name !== post.metadata.name) return;
-        const title = post.spec?.title ?? "Untitled";
+        const title = post.spec?.title ?? t("post.untitled");
         chat.setContext(
           `post:${post.metadata.name}`,
-          `[Context: 当前正在阅读文章。文章详细信息： "${title}"]\n\n${md}`,
+          `${t("ai.ctx.reading", { title })}\n\n${md}`,
         );
       });
     } else {
@@ -51,13 +53,10 @@ export function MainContent() {
         const list = items
           .map(
             (p, i) =>
-              `${i + 1}. ${p.spec?.title ?? "Untitled"} (${p.metadata.name})`,
+              `${i + 1}. ${p.spec?.title ?? t("post.untitled")} (${p.metadata.name})`,
           )
           .join("\n");
-        chat.setContext(
-          "home",
-          `[Context: 当前在首页，文章列表如下]\n\n${list}`,
-        );
+        chat.setContext("home", `${t("ai.ctx.home")}\n\n${list}`);
       }
     }
   });
@@ -104,26 +103,26 @@ export function MainContent() {
             setShowPost(null);
           }}
         >
-          {showPost() == null ? "[ESC] 断开连接" : "[ESC] 返回首页"}
+          {showPost() == null ? t("nav.disconnect") : t("nav.backToList")}
         </text>
         <Show when={showPost() == null}>
           <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}>
-            ✦ 文章列表
+            {t("posts.title")}
           </text>
         </Show>
         <Show when={showPost() == null}>
           <text style={{ fg: theme.textMuted }}>
-            共 {posts()?.total ?? 0} 篇
+            {t("posts.count", { count: posts()?.total ?? 0 })}
           </text>
         </Show>
         <Show when={showPost() != null}>
           <text>
-            {(showPost()?.spec?.title ?? "Untitled").slice(0, 20)}
+            {(showPost()?.spec?.title ?? t("post.untitled")).slice(0, 20)}
             {(showPost()?.spec?.title ?? "").length > 20 ? "…" : ""}
           </text>
         </Show>
 
-        <text>{"[Ctrl+T] 主题切换"}</text>
+        <text>{t("shortcut.theme")}</text>
       </box>
       <Show when={showPost() != null}>
         <PostDetail
@@ -139,7 +138,9 @@ export function MainContent() {
           fallback={
             <text style={{ fg: theme.error || "#ff5555" }}>
               {" "}
-              加载失败: {posts.error?.message || "未知网络错误"}
+              {t("posts.loadError", {
+                message: posts.error?.message || t("error.unknownNetwork"),
+              })}
             </text>
           }
         >
@@ -149,7 +150,7 @@ export function MainContent() {
             fallback={
               <text style={{ fg: theme.textMuted }}>
                 {" "}
-                正在从 Halo 读取文章列表中...
+                {t("posts.loading")}
               </text>
             }
           >

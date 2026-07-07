@@ -49,6 +49,21 @@ ssh -p 2222 user@your-server
 
 > 任意用户名即可，无需密码。
 
+## English / 繁體中文 & public deploy
+
+- **UI languages:** English and Traditional Chinese. Set the default with
+  `DEFAULT_LOCALE` (`en` | `zh-TW`) in `.env`; visitors switch live with **Ctrl+L**.
+  The optional AI assistant (off by default) also replies in the selected language when enabled.
+- **Go public with no open ports:** a browser terminal (`ttyd`) renders the same
+  TUI over HTTP so it can travel through a Cloudflare Tunnel, while real SSH stays
+  optional. Full walkthrough: **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
+  ```bash
+  cp .env.example .env   # set HALO_BASE_URL and DEFAULT_LOCALE (AI is optional, off by default)
+  docker compose up -d --build
+  # then point your Cloudflare Tunnel at http://localhost:7681
+  ```
+
 ## 环境变量
 
 参考 `.env.example` 文件，创建 `.env` 文件。

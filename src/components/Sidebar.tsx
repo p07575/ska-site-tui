@@ -7,8 +7,10 @@ import { formatDate } from "../lib/date";
 import { useSession } from "../context/SessionContext";
 import { useFocusGroup } from "../context/FocusContext";
 import { getBlogSourceList } from "../api/adapters";
+import { useI18n } from "../i18n";
 export function Sidebar({ width }: { width: number | `${number}%` }) {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const { currentSource, setCurrentSource, showPost, setShowPost } = usePostContext();
   const session = useSession();
   const blogSources = getBlogSourceList();
@@ -37,40 +39,48 @@ export function Sidebar({ width }: { width: number | `${number}%` }) {
         paddingX={1}
       >
         <Show when={showPost() != null}>
-          <text>当前文章：{showPost()?.spec?.title || "无名"}</text>
           <text>
-            更新时间：
+            {t("sidebar.currentPost", {
+              title: showPost()?.spec?.title || t("post.untitled"),
+            })}
+          </text>
+          <text>
+            {t("sidebar.updatedAt")}
             {formatDate(showPost()?.spec?.publishTime)}
           </text>
         </Show>
         <Show when={showPost() == null}>
-          <text>当前位置：首页</text>
-          <text>当前用户：{session.username}</text>
+          <text>{t("sidebar.locationHome")}</text>
+          <text>{t("sidebar.currentUser", { user: session.username })}</text>
         </Show>
       </box>
       <box
         style={{
           border: true,
         }}
-        title=" 友链 "
+        title={t("sidebar.links")}
         titleColor="#5cb66b"
         flexShrink={0}
         paddingX={1}
       >
-        {blogSources.map((source) => (
-          <text
-            style={{
-              alignSelf: "center",
-              fg: currentSource() === source.id ? "#5cb66b" : theme.text,
-            }}
-            onMouseDown={() => {
-              setShowPost(null);
-              setTimeout(() => setCurrentSource(source.id), 0);
-            }}
-          >
-            {currentSource() === source.id ? `▸ ${source.name}` : source.name}
-          </text>
-        ))}
+        {blogSources.map((source) => {
+          const label = () =>
+            source.id === "master" ? t("source.master") : source.name;
+          return (
+            <text
+              style={{
+                alignSelf: "center",
+                fg: currentSource() === source.id ? "#5cb66b" : theme.text,
+              }}
+              onMouseDown={() => {
+                setShowPost(null);
+                setTimeout(() => setCurrentSource(source.id), 0);
+              }}
+            >
+              {currentSource() === source.id ? `▸ ${label()}` : label()}
+            </text>
+          );
+        })}
       </box>
       <box
         style={{

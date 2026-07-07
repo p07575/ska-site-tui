@@ -10,7 +10,7 @@ import type { ListedPostVoList } from "./types";
  */
 export const queryPostsTool = tool({
   description:
-    "查询 ska 博客的全部文章列表。当用户想要浏览文章列表、查看最新文章时使用此工具。返回结果中包含每篇文章的 name（UUID）和 title，如果需要查看某篇文章的详细内容，请使用 queryPostByName 工具并传入对应的 name。",
+    "Query the full list of articles on the ska blog. Use this when the user wants to browse the article list or see the latest posts. Each result includes the article's name (UUID) and title; to read a specific article's full content, call the queryPostByName tool with the corresponding name.",
   inputSchema: z.object({}),
   execute: async () => {
     try {
@@ -27,14 +27,14 @@ export const queryPostsTool = tool({
             name: item.metadata.name,
             title: item.spec.title,
             publishTime: item.spec.publishTime,
-            author: item.owner?.displayName ?? "未知作者",
+            author: item.owner?.displayName ?? "Unknown author",
           })),
         },
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "查询文章列表失败",
+        error: error instanceof Error ? error.message : "Failed to query the post list",
       };
     }
   },
@@ -108,9 +108,9 @@ export const queryPostsTool = tool({
  */
 export const queryPostByNameTool = tool({
   description:
-    "根据文章的 metadata.name（UUID 格式，如 019edc19-47fe-713a-a9f9-c85f4c5581f2）查询单篇文章的完整信息。注意：此参数是文章的 name（UUID），不是文章标题！请先用 queryPosts 获取文章列表，从中找到对应的 name 后再调用此工具。",
+    "Query the full information of a single article by its metadata.name (a UUID, e.g. 019edc19-47fe-713a-a9f9-c85f4c5581f2). Note: this parameter is the article's name (UUID), NOT its title! First call queryPosts to get the article list, find the matching name there, then call this tool.",
   inputSchema: z.object({
-    name: z.string().describe("文章的 metadata.name，必须是 UUID 格式，如 019edc19-47fe-713a-a9f9-c85f4c5581f2，绝对不是文章标题"),
+    name: z.string().describe("The article's metadata.name; must be a UUID such as 019edc19-47fe-713a-a9f9-c85f4c5581f2, definitely not the article title"),
   }),
   execute: async (params) => {
     try {
@@ -126,9 +126,9 @@ export const queryPostByNameTool = tool({
           visible: post.spec?.visible,
           excerpt: post.content?.raw
             ? post.content.raw.substring(0, 500) + (post.content.raw.length > 500 ? "..." : "")
-            : "无摘要",
-          content: post.content?.content ?? post.content?.raw ?? "无内容",
-          author: post.owner?.displayName ?? "未知作者",
+            : "No excerpt",
+          content: post.content?.content ?? post.content?.raw ?? "No content",
+          author: post.owner?.displayName ?? "Unknown author",
           categories: post.categories?.map((c) => c.spec?.displayName ?? c.metadata.name) ?? [],
           tags: post.tags?.map((t) => t.spec?.displayName ?? t.metadata.name) ?? [],
           stats: post.stats
@@ -143,7 +143,7 @@ export const queryPostByNameTool = tool({
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "查询文章详情失败",
+        error: error instanceof Error ? error.message : "Failed to query post detail",
       };
     }
   },

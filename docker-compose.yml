@@ -1,13 +1,65 @@
+# SKA-SITE-TUI — 1Panel + Cloudflare Tunnel deployment.
+#
+# Design goals:
+#   * NO inbound ports published to the host. Your existing cloudflared dials
+#     OUT to Cloudflare, so nothing here is exposed on 0.0.0.0.
+#   * Public visitors reach the TUI over HTTP via `web-terminal` (ttyd) at
+#     sblog.jasonxiang.net. Raw SSH can't go public through a normal tunnel, so
+#     the SSH server stays internal on the Docker network.
+#   * Everything shares `1panel-network` so this app can reach your Halo
+#     container by name, and cloudflared can reach the web terminal by name.
+#
+# Setup:  cp .env.example .env  (set HALO_BASE_URL to your Halo container),
+#         then:  docker compose up -d --build
+# Full walkthrough: docs/1PANEL.md
+
 services:
   ska-site-tui:
     build: .
-    image: ghcr.io/sakuraofficial/ska-site-tui:latest
+    image: ska-site-tui:latest
     container_name: ska-site-tui
     restart: unless-stopped
-    ports:
-      - "${PORT:-2222}:2222"
-    volumes:
-      - ./data/keys:/app/.keys
-      - ./.data:/app/.data
+    env_file:
+      - .env
     environment:
       - PORT=2222
+      # HALO_BASE_URL / ENABLE_AI / DEFAULT_LOCALE come from .env
+    expose:
+      - "2222" # internal only — reachable by web-terminal on the network
+    volumes:
+      - ./data/keys:/app/.keys # persist the SSH host key so it doesn't change
+      - ./.data:/app/.data
+    networks:
+      - default
+      - 1panel-network
+
+  web-terminal:
+    build: ./web-terminal
+    image: ska-site-web-terminal:latest
+    container_name: ska-web-terminal
+    restart: unless-stopped
+    depends_on:
+      - ska-site-tui
+    environment:
+      - TARGET_HOST=ska-site-tui
+      - TARGET_PORT=2222
+      - SSH_USER=guest
+      - TTYD_PORT=7681
+    expose:
+      - "7681" # a CONTAINER cloudflared reaches this as http://ska-web-terminal:7681
+    ports:
+      # Host loopback only — lets a HOST cloudflared use http://localhost:7681.
+      # 127.0.0.1 means it is NOT reachable from the internet/LAN, only the box itself.
+      - "127.0.0.1:7681:7681"
+    networks:
+      - default
+      - 1panel-network
+
+networks:
+  # `default` keeps ska-site-tui <-> web-terminal private to this app.
+  default:
+    driver: bridge
+  # 1Panel's shared network — lets this app talk to Halo + cloudflared.
+  # Created by 1Panel; if the name differs, run:  docker network ls
+  1panel-network:
+    external: true

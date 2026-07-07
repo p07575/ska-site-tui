@@ -7,6 +7,7 @@ import {
 } from "solid-js";
 import { streamChat, getAIModel, type StreamCallbacks } from "../api/chat";
 import { useSession } from "./SessionContext";
+import { useI18n } from "../i18n";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -27,6 +28,7 @@ const ChatContext = createContext<ChatContextValue>();
 
 export function ChatProvider(props: ParentProps) {
   const session = useSession();
+  const { t, locale } = useI18n();
   const [messages, setMessages] = createSignal<ChatMessage[]>([]);
   const [markdownContent, setMarkdownContent] = createSignal("");
   const [isStreaming, setIsStreaming] = createSignal(false);
@@ -60,7 +62,7 @@ export function ChatProvider(props: ParentProps) {
     for (let i = 0; i < msgs.length; i++) {
       const m = msgs[i]!;
       if (m.role === "user") {
-        md += `> **You:** ${m.content}\n\n`;
+        md += `> **${t("chat.you")}:** ${m.content}\n\n`;
       } else {
         md += m.content + "\n\n";
       }
@@ -74,7 +76,7 @@ export function ChatProvider(props: ParentProps) {
     const model = getAIModel();
     if (!model) {
       console.error("[chat] AI_MODEL is not configured");
-      setMarkdownContent((prev) => prev + "\n\n> ❌ AI_MODEL 未配置\n\n");
+      setMarkdownContent((prev) => prev + `\n\n> ${t("chat.noModel")}\n\n`);
       return;
     }
 
@@ -108,11 +110,11 @@ export function ChatProvider(props: ParentProps) {
     if (contextDirty && currentContextContent) {
       const contextSwitchMsg = {
         role: "user" as const,
-        content: `【系统通知】上下文已切换，请基于以下内容回答后续问题：\n${currentContextContent}`,
+        content: t("ai.ctx.switch", { content: currentContextContent }),
       };
       const contextAckMsg = {
         role: "assistant" as const,
-        content: "好的，ska 已经明白了(嚣张)~有什么想问的就尽管说吧！",
+        content: t("ai.ctx.ack"),
       };
       history.push(contextSwitchMsg, contextAckMsg);
     }
@@ -166,7 +168,14 @@ export function ChatProvider(props: ParentProps) {
       },
     };
 
-    streamChat(history, callbacks, abortController.signal, activeContext, userId);
+    streamChat(
+      history,
+      callbacks,
+      abortController.signal,
+      activeContext,
+      userId,
+      locale(),
+    );
   }
 
   function abort() {

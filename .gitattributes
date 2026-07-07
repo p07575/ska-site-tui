@@ -1,0 +1,2 @@
+# Shell scripts must stay LF so they run in Linux containers (Alpine /bin/sh).
+*.sh text eol=lf

@@ -13,38 +13,14 @@ export interface BlogSourceConfig {
 export const BLOG_SOURCES: BlogSourceConfig[] = [
   {
     id: "master",
-    name: "回到主站",
+    name: "Jx Blog",
     type: "halo",
     config: {
       baseUrl: process.env.HALO_BASE_URL ?? "http://localhost:8090",
       auth: process.env.HALO_AUTH ?? "",
     },
   },
-  {
-    id: "none",
-    name: "none",
-    type: "halo",
-    config: {
-      baseUrl: "https://none-blog.top",
-    },
-  },
-  {
-    id: "rss-qaqbuyan",
-    name: "qaq-buyan",
-    type: "rss",
-    config: {
-      rssUrl: "https://qaqbuyan.com:88/%E4%B9%94%E5%AE%89%E6%96%87%E7%AB%A0/rss",
-      fetchFullContent: "true",
-    },
-  },
-  {
-    id: "haoyn231",
-    name: "haoyn231",
-    type: "rss",
-    config: {
-      rssUrl: "https://haoyn231.github.io/rss.xml",
-    },
-  },
+  // Add more sources here (halo or rss) to populate the sidebar's "Links".
 ];
 
 /** 根据配置创建 adapter 实例 */

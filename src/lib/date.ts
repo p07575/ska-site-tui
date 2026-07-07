@@ -1,5 +1,5 @@
 export function formatDate(dateStr?: string): string {
-  if (!dateStr) return "未知日期";
+  if (!dateStr) return "—";
   try {
     const d = new Date(dateStr);
     const y = d.getFullYear();

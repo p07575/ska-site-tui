@@ -2,26 +2,31 @@
 import { TextAttributes } from "@opentui/core"
 import { useTheme } from "../context/ThemeContext"
 import { useSession } from "../context/SessionContext"
+import { useI18n } from "../i18n"
 import { useDialog, type DialogContext } from "./dialog"
 
 export function UserInfoDialog() {
   const dialog = useDialog()
   const { theme } = useTheme()
+  const { t } = useI18n()
   const session = useSession()
 
-  const methodLabel: Record<string, string> = {
-    none: "无认证",
-    password: "密码认证",
-    "keyboard-interactive": "键盘交互认证",
-    publickey: "公钥认证",
-  }
+  const methodLabel = (m: string): string =>
+    (
+      {
+        none: t("auth.none"),
+        password: t("auth.password"),
+        "keyboard-interactive": t("auth.keyboardInteractive"),
+        publickey: t("auth.publickey"),
+      } as Record<string, string>
+    )[m] ?? m
 
   return (
     <box flexDirection="column" paddingLeft={2} paddingRight={2} paddingBottom={1} gap={1}>
       {/* Title */}
       <box flexDirection="row" justifyContent="space-between">
         <text attributes={TextAttributes.BOLD} fg={theme.text}>
-          连接用户信息
+          {t("userinfo.title")}
         </text>
         <text fg={theme.textMuted} onMouseUp={() => dialog.clear()}>
           esc
@@ -32,7 +37,7 @@ export function UserInfoDialog() {
         {/* Username */}
         <box flexDirection="row" gap={1}>
           <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-            用户名:
+            {t("userinfo.username")}
           </text>
           <text fg={theme.text}>{session.username}</text>
         </box>
@@ -40,16 +45,16 @@ export function UserInfoDialog() {
         {/* Auth method */}
         <box flexDirection="row" gap={1}>
           <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-            认证方式:
+            {t("userinfo.authMethod")}
           </text>
-          <text fg={theme.text}>{methodLabel[session.method] ?? session.method}</text>
+          <text fg={theme.text}>{methodLabel(session.method)}</text>
         </box>
 
         {/* Fingerprint (publickey only) */}
         {session.fingerprint && (
           <box flexDirection="row" gap={1}>
             <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-              公钥指纹:
+              {t("userinfo.fingerprint")}
             </text>
             <text fg={theme.text}>{session.fingerprint}</text>
           </box>
@@ -59,7 +64,7 @@ export function UserInfoDialog() {
         {session.publicKey && (
           <box flexDirection="row" gap={1}>
             <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-              密钥算法:
+              {t("userinfo.keyAlgorithm")}
             </text>
             <text fg={theme.text}>{session.publicKey.algorithm}</text>
           </box>
@@ -68,7 +73,7 @@ export function UserInfoDialog() {
         {/* Remote address */}
         <box flexDirection="row" gap={1}>
           <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-            远程地址:
+            {t("userinfo.remoteAddress")}
           </text>
           <text fg={theme.text}>
             {session.remoteAddress.address}
@@ -79,15 +84,15 @@ export function UserInfoDialog() {
         {/* Terminal type */}
         <box flexDirection="row" gap={1}>
           <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-            终端类型:
+            {t("userinfo.terminalType")}
           </text>
-          <text fg={theme.text}>{session.term || "(未知)"}</text>
+          <text fg={theme.text}>{session.term || t("common.unknown")}</text>
         </box>
 
         {/* Terminal size */}
         <box flexDirection="row" gap={1}>
           <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-            终端尺寸:
+            {t("userinfo.terminalSize")}
           </text>
           <text fg={theme.text}>
             {session.cols} × {session.rows}
@@ -97,14 +102,16 @@ export function UserInfoDialog() {
         {/* PTY */}
         <box flexDirection="row" gap={1}>
           <text fg={theme.accent} attributes={TextAttributes.BOLD}>
-            PTY:
+            {t("userinfo.pty")}
           </text>
-          <text fg={theme.text}>{session.hasPty ? "已请求" : "未请求"}</text>
+          <text fg={theme.text}>
+            {session.hasPty ? t("userinfo.requested") : t("userinfo.notRequested")}
+          </text>
         </box>
       </box>
 
       {/* Hint */}
-      <text fg={theme.textMuted}>Esc 关闭</text>
+      <text fg={theme.textMuted}>{t("common.escClose")}</text>
     </box>
   )
 }

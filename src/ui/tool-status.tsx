@@ -16,7 +16,7 @@ interface TaskFlowDocument {
 }
 function parseTaskFlow(source: string): TaskFlowDocument {
   const document: TaskFlowDocument = {
-    title: "未命名任务流",
+    title: "Untitled task flow",
     owner: "unknown",
     steps: [],
   };
@@ -85,7 +85,7 @@ export function createToolStatusRenderer(
     });
     card.add(
       new TextRenderable(renderer, {
-        content: `所有者 ${flow.owner}  |  ${flow.steps.length} 个步骤`,
+        content: `owner ${flow.owner}  |  ${flow.steps.length} steps`,
       }),
     );
     // card.add(
