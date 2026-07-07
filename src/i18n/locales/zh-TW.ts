@@ -13,7 +13,7 @@ export const zhTW: Messages = {
   "app.bar.theme": "主題",
   "app.bar.user": "使用者",
   "app.bar.language": "語言",
-  "app.bar.back": "返回/斷線",
+  "app.bar.back": "返回",
   "app.bar.quit": "退出",
 
   // ── posts / main content ──
@@ -23,9 +23,10 @@ export const zhTW: Messages = {
   "posts.loadError": "載入失敗：{message}",
   "posts.empty": "暫無文章",
   "error.unknownNetwork": "未知網路錯誤",
-  "nav.disconnect": "[ESC] 斷線",
+  "nav.disconnect": "[Ctrl+D] 斷線",
   "nav.backToList": "[ESC] 返回首頁",
   "shortcut.theme": "[T] 主題切換",
+  "shortcut.user": "[U] 使用者",
 
   // ── post card ──
   "post.untitled": "無標題",

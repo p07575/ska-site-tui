@@ -73,6 +73,9 @@ function KeyboardHandler() {
   const keyHandler = (key: { name: string; ctrl?: boolean }) => {
     // A dialog is open → let it handle its own keys (arrows/enter/esc).
     if (dialog.stack.length > 0) return;
+    // The keypress that just closed a dialog must not also act globally
+    // (otherwise Esc-to-close would cascade into "go back" / disconnect).
+    if (dialog.keyConsumed) return;
     // Bare-letter shortcuts: Ctrl+T/U/L are hijacked by browsers (new tab /
     // view-source / address bar) in the web terminal, so use plain letters.
     // (Safe because there is no text input in the UI while AI is disabled.)
@@ -88,13 +91,15 @@ function KeyboardHandler() {
       LanguageDialog.show(dialog);
       return;
     }
-    // ESC：全局范围内返回首页或断开连接
+    // Ctrl+D disconnects (Ctrl+C works too). Esc NEVER disconnects — it only
+    // steps back from a post to the list — so closing a dialog with Esc can't
+    // drop the connection.
+    if (key.ctrl && key.name === "d") {
+      session.endSession();
+      return;
+    }
     if (key.name === "escape") {
-      if (showPost() != null) {
-        setShowPost(null);
-      } else {
-        session.endSession();
-      }
+      if (showPost() != null) setShowPost(null);
     }
   };
 
@@ -126,7 +131,7 @@ function AppContent({ name }: { name: string }) {
       }}
       title=" jx-blog "
       titleAlignment="left"
-      bottomTitle={`  T ${t("app.bar.theme")}   U ${t("app.bar.user")}   L ${t("app.bar.language")}   ESC ${t("app.bar.back")}   Q ${t("app.bar.quit")}  `}
+      bottomTitle={`  T ${t("app.bar.theme")}   U ${t("app.bar.user")}   L ${t("app.bar.language")}   ESC ${t("app.bar.back")}   Ctrl+D ${t("app.bar.quit")}  `}
       bottomTitleAlignment="center"
     >
       {/* <Header name={name} /> */}

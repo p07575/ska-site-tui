@@ -12,7 +12,7 @@ export const en = {
   "app.bar.theme": "Theme",
   "app.bar.user": "User",
   "app.bar.language": "Language",
-  "app.bar.back": "Back/Disconnect",
+  "app.bar.back": "Back",
   "app.bar.quit": "Quit",
 
   // ── posts / main content ──
@@ -22,9 +22,10 @@ export const en = {
   "posts.loadError": "Load failed: {message}",
   "posts.empty": "No posts yet",
   "error.unknownNetwork": "Unknown network error",
-  "nav.disconnect": "[ESC] Disconnect",
+  "nav.disconnect": "[Ctrl+D] Disconnect",
   "nav.backToList": "[ESC] Back to list",
   "shortcut.theme": "[T] Theme",
+  "shortcut.user": "[U] User",
 
   // ── post card ──
   "post.untitled": "Untitled",

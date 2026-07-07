@@ -37,12 +37,11 @@ export function ThemeDialog() {
     // }
   });
 
-  // Restore original theme on Esc (component cleanup without confirmation)
+  // Closing the dialog (Esc or Enter) keeps whatever theme is previewed —
+  // navigating the list applies it live, and we no longer revert on Esc.
   onCleanup(() => {
-    if (!confirmed) {
-      set(initialTheme);
-      // setMode(initialMode); // mode toggle disabled
-    }
+    void confirmed;
+    void initialTheme;
   });
 
   const themes = Object.keys(all());

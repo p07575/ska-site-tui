@@ -89,6 +89,10 @@ function init() {
     }, 1)
   }
 
+  // Set true for one tick when a key (Esc/Ctrl+C) closes a dialog, so the
+  // global key handler can ignore that same event instead of also acting on it.
+  let keyConsumed = false
+
   // Keyboard handling for ESC to close dialog
   const keyHandler = (key: { name: string; ctrl?: boolean }) => {
     if (store.stack.length === 0) return
@@ -100,6 +104,10 @@ function init() {
       current?.onClose?.()
       setStore("stack", store.stack.slice(0, -1))
       refocus()
+      keyConsumed = true
+      queueMicrotask(() => {
+        keyConsumed = false
+      })
     }
   }
 
@@ -135,6 +143,9 @@ function init() {
     },
     get stack() {
       return store.stack
+    },
+    get keyConsumed() {
+      return keyConsumed
     },
     get size() {
       return store.size

@@ -132,7 +132,10 @@ export function MainContent() {
           </text>
         </Show>
 
-        <text>{t("shortcut.theme")}</text>
+        <box style={{ flexDirection: "row", gap: 3 }}>
+          <text>{t("shortcut.user")}</text>
+          <text>{t("shortcut.theme")}</text>
+        </box>
       </box>
       <Show when={showPost() != null}>
         <PostDetail
