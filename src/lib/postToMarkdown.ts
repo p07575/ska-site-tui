@@ -13,6 +13,19 @@ const turndownService = new TurndownService({
 // 2. 使用 GFM 插件（支持删除线 <s>、任务列表、表格等）
 turndownService.use(gfm);
 
+// 2b. Drop non-content nodes entirely. Halo plugins (e.g. shiki) inject
+// <style>/<script> blocks into the rendered HTML; without this, Turndown emits
+// their raw CSS/JS as visible text (e.g. "pre:has(code) { filter: blur(...) }").
+turndownService.remove([
+  "style",
+  "script",
+  "noscript",
+  "head",
+  "title",
+  "link",
+  "meta",
+]);
+
 // 3. 自定义规则（可选）：处理你 HTML 中特殊的标签
 // 例如：你的代码块带有 class="language-cpp"，我们希望把语言提取出来
 turndownService.addRule("fencedCodeBlock", {
