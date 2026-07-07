@@ -8,7 +8,10 @@ export interface HaloAdapterConfig {
   auth?: string;
 }
 
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 分钟
+// Content cache TTL. Lower = new posts show sooner; higher = fewer requests to
+// Halo. The cache is shared across all sessions, so even with many visitors Halo
+// is hit at most once per TTL per query. Override with HALO_CACHE_TTL_MS (ms).
+const CACHE_TTL_MS = Number(process.env.HALO_CACHE_TTL_MS ?? 60_000); // 60s
 
 // 每个 adapter 实例独立的缓存
 const haloListCache = new Map<string, types.ListedPostVoList>();
