@@ -134,6 +134,7 @@ export function MainContent() {
 
         <box style={{ flexDirection: "row", gap: 3 }}>
           <text>{t("shortcut.user")}</text>
+          <text>{t("shortcut.language")}</text>
           <text>{t("shortcut.theme")}</text>
         </box>
       </box>

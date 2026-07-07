@@ -27,6 +27,7 @@ export const zhTW: Messages = {
   "nav.backToList": "[ESC] 返回首頁",
   "shortcut.theme": "[T] 主題切換",
   "shortcut.user": "[U] 使用者",
+  "shortcut.language": "[L] 語言",
 
   // ── post card ──
   "post.untitled": "無標題",

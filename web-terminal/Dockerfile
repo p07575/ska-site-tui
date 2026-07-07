@@ -1,15 +1,20 @@
-# Web terminal: serves the SKA TUI over HTTP/WebSocket (xterm.js) by
-# proxying to the app's SSH server. This is what Cloudflare Tunnel exposes
-# publicly — HTTP travels fine through a tunnel, raw SSH does not.
-FROM alpine:3.20
+# Web terminal: an xterm.js page bridged to the app's SSH server over a
+# WebSocket. This is what Cloudflare Tunnel exposes publicly (HTTP travels fine
+# through a tunnel; raw SSH does not). Unlike ttyd, the client hands browser
+# shortcuts (F11 / F5 / Ctrl+R / zoom) back to the browser.
+FROM node:20-slim
 
-# ttyd lives in the Alpine "community" repo; openssh-client is in "main".
-RUN echo "https://dl-cdn.alpinelinux.org/alpine/v3.20/community" >> /etc/apk/repositories \
- && apk add --no-cache ttyd openssh-client
+WORKDIR /app
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY package.json ./
+# ssh2's native optional deps (cpu-features) need a toolchain; skip them — ssh2
+# falls back to its pure-JS crypto, which is what we use here.
+RUN npm install --omit=optional --no-audit --no-fund
+
+COPY server.mjs ./
+COPY public ./public
 
 EXPOSE 7681
+ENV TTYD_PORT=7681
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["node", "server.mjs"]

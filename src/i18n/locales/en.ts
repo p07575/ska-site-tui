@@ -26,6 +26,7 @@ export const en = {
   "nav.backToList": "[ESC] Back to list",
   "shortcut.theme": "[T] Theme",
   "shortcut.user": "[U] User",
+  "shortcut.language": "[L] Lang",
 
   // ── post card ──
   "post.untitled": "Untitled",

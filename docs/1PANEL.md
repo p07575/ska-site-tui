@@ -70,8 +70,9 @@ Check it's healthy and the web terminal answers **from inside the network**
 (there's no host port, so test from another container):
 
 ```bash
-docker logs ska-site-tui           # should show "@opentui/ssh ▸ ssh://…:2222"
-docker exec ska-web-terminal wget -qO- http://ska-site-tui:2222 >/dev/null; echo "ssh reachable: $?"
+docker logs ska-site-tui                       # should show "@opentui/ssh ▸ ssh://…:2222"
+docker logs ska-web-terminal                   # should show "http+ws :7681 -> ssh guest@ska-site-tui:2222"
+curl -sf http://localhost:7681/healthz && echo "  web terminal: ok"
 ```
 
 ## 5. Point the tunnel at it — `sblog.jasonxiang.net`
