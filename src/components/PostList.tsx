@@ -125,13 +125,14 @@ export function PostList(props: PostListProps) {
   });
 
   return (
-    <box>
+    <box style={{ width: "100%", height: "100%" }}>
       <scrollbox
         ref={(r) => (scrollboxRef = r)}
         scrollAcceleration={fastScroll}
         style={{
-          flexGrow: 0,
+          flexGrow: 1,
           flexShrink: 1,
+          width: "100%",
           height: "100%",
           flexDirection: "row",
           backgroundColor: theme.background,
@@ -141,8 +142,8 @@ export function PostList(props: PostListProps) {
           scrollY: true,
         }}
         contentOptions={{
-          flexGrow: 0,
-          minWidth: "0%",
+          flexGrow: 1,
+          minWidth: "100%",
         }}
         // verticalScrollbarOptions={{
         //   trackOptions: {
@@ -153,6 +154,7 @@ export function PostList(props: PostListProps) {
       >
         <box
           style={{
+            width: "100%",
             flexDirection: "column",
             alignItems: "stretch",
             justifyContent: "flex-start",
@@ -161,7 +163,7 @@ export function PostList(props: PostListProps) {
           }}
         >
           {/* ── 文章卡片列表 ── */}
-          <box style={{ flexDirection: "column", gap: 1 }}>
+          <box style={{ width: "100%", flexDirection: "column", gap: 1 }}>
             <For each={props.posts}>
               {(post, index) => {
                 const title = () => post.spec?.title ?? t("post.untitled");

@@ -14,8 +14,11 @@ echo "[web-terminal] ttyd :${TTYD_PORT} -> ssh ${SSH_USER}@${TARGET_HOST}:${TARG
 exec ttyd \
   --port "${TTYD_PORT}" \
   --writable \
+  --max-clients 50 \
   --client-option 'disableLeaveAlert=true' \
-  --client-option 'theme={"background":"#0d1117"}' \
+  --client-option 'fontSize=16' \
+  --client-option 'titleFixed=jx-blog' \
+  --client-option 'theme={"background":"#0a0a0a","foreground":"#eeeeee"}' \
   ssh -tt \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \

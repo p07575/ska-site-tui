@@ -117,7 +117,7 @@ function AppContent({ name }: { name: string }) {
         // border: ["top", "left", "right", "bottom"],
         // borderStyle: "heavy",
       }}
-      title=" SKA-SITE://ROOT "
+      title=" jx-blog "
       titleAlignment="left"
       bottomTitle={`  Ctrl+T ${t("app.bar.theme")}   Ctrl+U ${t("app.bar.user")}   Ctrl+L ${t("app.bar.language")}   ESC ${t("app.bar.back")}   Q/Ctrl+C ${t("app.bar.quit")}  `}
       bottomTitleAlignment="center"
@@ -185,6 +185,12 @@ const server = createServer({
   hostKey: { path: "./.keys/host_key" },
   // auth: { publicKey: "any" },
   auth: "open",
+  // ── Hardening for a public, unauthenticated, read-only TUI ──
+  // Drop idle/stuck sessions and cap concurrency so anonymous visitors
+  // (or a bot loop) can't pile up renderer-backed shells and exhaust the box.
+  idleTimeout: "10m", // disconnect after 10 min of no input
+  maxTimeout: "60m", // hard cap any single session at 60 min
+  limits: { session: { perConnection: 1, global: 100 } },
 }).serve((session) => {
   session.renderer.targetFps = 60;
   const [sessionStore, setSessionStore] = createStore({

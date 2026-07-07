@@ -82,6 +82,16 @@ export function MainContent() {
         // backgroundColor: "#ffffff",
       }}
     >
+      {/* centered content column — balanced margins on wide terminals */}
+      <box
+        style={{
+          width: "100%",
+          maxWidth: 160,
+          height: "100%",
+          flexDirection: "column",
+          alignItems: "stretch",
+        }}
+      >
       {/* ── 列表头 ── */}
       <box
         style={{
@@ -163,6 +173,7 @@ export function MainContent() {
           </Show>
         </Show>
       </Show>
+      </box>
     </box>
   );
 }
