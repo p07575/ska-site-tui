@@ -71,18 +71,25 @@ function KeyboardHandler() {
   const session = useSession();
 
   const keyHandler = (key: { name: string; ctrl?: boolean }) => {
-    if (key.ctrl && key.name === "t") {
+    // A dialog is open → let it handle its own keys (arrows/enter/esc).
+    if (dialog.stack.length > 0) return;
+    // Bare-letter shortcuts: Ctrl+T/U/L are hijacked by browsers (new tab /
+    // view-source / address bar) in the web terminal, so use plain letters.
+    // (Safe because there is no text input in the UI while AI is disabled.)
+    if (!key.ctrl && key.name === "t") {
       ThemeDialog.show(dialog);
+      return;
     }
-    if (key.ctrl && key.name === "u") {
+    if (!key.ctrl && key.name === "u") {
       UserInfoDialog.show(dialog);
+      return;
     }
-    if (key.ctrl && key.name === "l") {
+    if (!key.ctrl && key.name === "l") {
       LanguageDialog.show(dialog);
+      return;
     }
-    // ESC：弹窗已由 dialog 自行处理；全局范围内返回首页或断开连接
+    // ESC：全局范围内返回首页或断开连接
     if (key.name === "escape") {
-      if (dialog.stack.length > 0) return;
       if (showPost() != null) {
         setShowPost(null);
       } else {
@@ -119,7 +126,7 @@ function AppContent({ name }: { name: string }) {
       }}
       title=" jx-blog "
       titleAlignment="left"
-      bottomTitle={`  Ctrl+T ${t("app.bar.theme")}   Ctrl+U ${t("app.bar.user")}   Ctrl+L ${t("app.bar.language")}   ESC ${t("app.bar.back")}   Q/Ctrl+C ${t("app.bar.quit")}  `}
+      bottomTitle={`  T ${t("app.bar.theme")}   U ${t("app.bar.user")}   L ${t("app.bar.language")}   ESC ${t("app.bar.back")}   Q ${t("app.bar.quit")}  `}
       bottomTitleAlignment="center"
     >
       {/* <Header name={name} /> */}

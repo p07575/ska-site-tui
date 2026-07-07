@@ -25,7 +25,7 @@ export const zhTW: Messages = {
   "error.unknownNetwork": "未知網路錯誤",
   "nav.disconnect": "[ESC] 斷線",
   "nav.backToList": "[ESC] 返回首頁",
-  "shortcut.theme": "[Ctrl+T] 主題切換",
+  "shortcut.theme": "[T] 主題切換",
 
   // ── post card ──
   "post.untitled": "無標題",

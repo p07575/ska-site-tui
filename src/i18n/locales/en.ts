@@ -24,7 +24,7 @@ export const en = {
   "error.unknownNetwork": "Unknown network error",
   "nav.disconnect": "[ESC] Disconnect",
   "nav.backToList": "[ESC] Back to list",
-  "shortcut.theme": "[Ctrl+T] Theme",
+  "shortcut.theme": "[T] Theme",
 
   // ── post card ──
   "post.untitled": "Untitled",
