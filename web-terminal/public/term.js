@@ -5,13 +5,15 @@
 (function () {
   "use strict";
 
-  // Scale the font to the viewport so narrow screens still fit a usable number
-  // of columns instead of a handful of huge characters. Desktop keeps 16px.
+  // Largest font we'll start from at a given width. The adaptive step below
+  // shrinks it further if the grid would be too narrow for the TUI's bars.
+  var MIN_COLS = 80; // keep the top/bottom bars on one line
+  var FONT_FLOOR = 9; // never smaller than this
   function pickFontSize() {
     var w = window.innerWidth || document.documentElement.clientWidth || 1024;
-    if (w <= 400) return 12;
-    if (w <= 600) return 13;
-    if (w <= 900) return 14;
+    if (w <= 400) return 11;
+    if (w <= 600) return 12;
+    if (w <= 900) return 13;
     return 16;
   }
 
@@ -63,11 +65,24 @@
   var pending = false;
   function applyFit() {
     pending = false;
-    var next = pickFontSize();
-    if (next !== term.options.fontSize) term.options.fontSize = next;
+    var startFont = pickFontSize();
+    term.options.fontSize = startFont;
     try {
       fit.fit();
     } catch (e) {}
+    // If the grid came out too narrow (phones), shrink the font to reach a
+    // usable column count so the TUI's bars don't wrap. cols * fontSize is
+    // ~constant (cell width scales with font), so solve for it in one step.
+    if (term.cols > 0 && term.cols < MIN_COLS) {
+      var target = Math.floor((startFont * term.cols) / MIN_COLS);
+      target = Math.max(FONT_FLOOR, Math.min(startFont, target));
+      if (target !== startFont) {
+        term.options.fontSize = target;
+        try {
+          fit.fit();
+        } catch (e) {}
+      }
+    }
     if (ws.readyState === 1) {
       ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
     }

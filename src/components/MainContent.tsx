@@ -16,6 +16,10 @@ import { postToMarkdown } from "../lib/postToMarkdown";
 import { useSession } from "../context/SessionContext";
 import { useI18n } from "../i18n";
 import { TextAttributes } from "@opentui/core";
+import { useDialog } from "../ui/dialog";
+import { ThemeDialog } from "../ui/dialog-theme";
+import { UserInfoDialog } from "../ui/dialog-user-info";
+import { LanguageDialog } from "../ui/dialog-language";
 
 export function MainContent() {
   const { theme } = useTheme();
@@ -23,6 +27,13 @@ export function MainContent() {
   const chat = useChat();
   const { currentSource, showPost, setShowPost } = usePostContext();
   const session = useSession();
+  const dialog = useDialog();
+
+  // Top-bar shortcuts are clickable/tappable as well as keyboard-driven.
+  // Ignore clicks while a dialog is already open (mirrors the key handler).
+  const openUser = () => dialog.stack.length === 0 && UserInfoDialog.show(dialog);
+  const openLang = () => dialog.stack.length === 0 && LanguageDialog.show(dialog);
+  const openTheme = () => dialog.stack.length === 0 && ThemeDialog.show(dialog);
 
   const [posts] = createResource(
     () => currentSource(),
@@ -133,9 +144,9 @@ export function MainContent() {
         </Show>
 
         <box style={{ flexDirection: "row", gap: 3 }}>
-          <text>{t("shortcut.user")}</text>
-          <text>{t("shortcut.language")}</text>
-          <text>{t("shortcut.theme")}</text>
+          <text onMouseDown={openUser}>{t("shortcut.user")}</text>
+          <text onMouseDown={openLang}>{t("shortcut.language")}</text>
+          <text onMouseDown={openTheme}>{t("shortcut.theme")}</text>
         </box>
       </box>
       <Show when={showPost() != null}>
