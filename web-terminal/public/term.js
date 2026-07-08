@@ -5,8 +5,18 @@
 (function () {
   "use strict";
 
+  // Scale the font to the viewport so narrow screens still fit a usable number
+  // of columns instead of a handful of huge characters. Desktop keeps 16px.
+  function pickFontSize() {
+    var w = window.innerWidth || document.documentElement.clientWidth || 1024;
+    if (w <= 400) return 12;
+    if (w <= 600) return 13;
+    if (w <= 900) return 14;
+    return 16;
+  }
+
   var term = new Terminal({
-    fontSize: 16,
+    fontSize: pickFontSize(),
     fontFamily:
       'ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace',
     cursorBlink: true,
@@ -41,7 +51,34 @@
   var fit = new FitAddon.FitAddon();
   term.loadAddon(fit);
   term.open(document.getElementById("terminal"));
-  fit.fit();
+
+  var enc = new TextEncoder();
+  var proto = location.protocol === "https:" ? "wss" : "ws";
+  var ws = new WebSocket(proto + "://" + location.host + "/ws");
+  ws.binaryType = "arraybuffer";
+
+  // Re-pick the font for the current width, fit the grid to the container, and
+  // tell the server the new size. Coalesced with rAF so a burst of resize/
+  // viewport events (mobile URL bar, keyboard, rotation) does one recompute.
+  var pending = false;
+  function applyFit() {
+    pending = false;
+    var next = pickFontSize();
+    if (next !== term.options.fontSize) term.options.fontSize = next;
+    try {
+      fit.fit();
+    } catch (e) {}
+    if (ws.readyState === 1) {
+      ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+    }
+  }
+  function scheduleFit() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(applyFit);
+  }
+
+  applyFit();
   term.focus();
 
   // Hand browser-level shortcuts back to the browser; send everything else to
@@ -58,20 +95,8 @@
     return true;
   });
 
-  var enc = new TextEncoder();
-  var proto = location.protocol === "https:" ? "wss" : "ws";
-  var ws = new WebSocket(proto + "://" + location.host + "/ws");
-  ws.binaryType = "arraybuffer";
-
-  function sendResize() {
-    try { fit.fit(); } catch (e) {}
-    if (ws.readyState === 1) {
-      ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
-    }
-  }
-
   ws.onopen = function () {
-    sendResize();
+    scheduleFit();
     term.focus();
   };
   ws.onmessage = function (ev) {
@@ -91,6 +116,24 @@
       ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
     }
   });
-  window.addEventListener("resize", sendResize);
-  window.addEventListener("focus", function () { term.focus(); });
+
+  // Refit on every way the visible viewport can change. On mobile the URL bar
+  // and on-screen keyboard resize the *visual* viewport without firing a normal
+  // window resize, so we also watch visualViewport and the element itself.
+  window.addEventListener("resize", scheduleFit);
+  window.addEventListener("orientationchange", scheduleFit);
+  window.addEventListener("focus", function () {
+    term.focus();
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleFit);
+    window.visualViewport.addEventListener("scroll", scheduleFit);
+  }
+  if (window.ResizeObserver) {
+    new ResizeObserver(scheduleFit).observe(document.getElementById("terminal"));
+  }
+  // Monospace web fonts can load after first paint and change the cell size.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(scheduleFit).catch(function () {});
+  }
 })();

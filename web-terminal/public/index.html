@@ -2,21 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Lock zoom so tapping xterm's input doesn't trigger iOS focus-zoom, and
+         so the dynamic viewport stays stable; desktop zoom (Ctrl +/-) is handed
+         to the browser separately in term.js. viewport-fit=cover for notches. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <title>jx-blog</title>
     <link rel="stylesheet" href="/vendor/xterm.css" />
     <style>
       html,
       body {
         margin: 0;
+        padding: 0;
         height: 100%;
         background: #0a0a0a;
         overflow: hidden;
       }
+      /* Fill the *visible* viewport. 100dvh tracks the mobile URL bar / keyboard
+         (100vh does not), with 100vh as the fallback for older browsers.
+         Safe-area insets keep the grid clear of notches and the home bar. */
       #terminal {
         position: fixed;
-        inset: 0;
-        padding: 6px;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        width: 100dvw;
+        height: 100vh;
+        height: 100dvh;
+        padding: calc(6px + env(safe-area-inset-top)) calc(6px + env(safe-area-inset-right))
+          calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+        box-sizing: border-box;
       }
       /* xterm sizes itself; keep it filling the padded box */
       .xterm,
