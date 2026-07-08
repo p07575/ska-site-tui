@@ -16,6 +16,7 @@ import { postToMarkdown } from "../lib/postToMarkdown";
 import { useSession } from "../context/SessionContext";
 import { useI18n } from "../i18n";
 import { TextAttributes } from "@opentui/core";
+import { useTerminalDimensions } from "@opentui/solid";
 import { useDialog } from "../ui/dialog";
 import { ThemeDialog } from "../ui/dialog-theme";
 import { UserInfoDialog } from "../ui/dialog-user-info";
@@ -28,6 +29,12 @@ export function MainContent() {
   const { currentSource, showPost, setShowPost } = usePostContext();
   const session = useSession();
   const dialog = useDialog();
+  const dims = useTerminalDimensions();
+
+  // Narrow terminals (phones) can't fit the full bar, so drop the middle
+  // title/count/post-title there — otherwise those segments overlap.
+  const wide = () => dims().width >= 72;
+  const titleLimit = () => (wide() ? 20 : 12);
 
   // Top-bar shortcuts are clickable/tappable as well as keyboard-driven.
   // Ignore clicks while a dialog is already open (mirrors the key handler).
@@ -116,6 +123,7 @@ export function MainContent() {
         }}
       >
         <text
+          style={{ flexShrink: 0 }}
           onMouseDown={() => {
             if (showPost() == null) {
               session.endSession();
@@ -126,24 +134,24 @@ export function MainContent() {
         >
           {showPost() == null ? t("nav.disconnect") : t("nav.backToList")}
         </text>
-        <Show when={showPost() == null}>
-          <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD }}>
+        <Show when={showPost() == null && wide()}>
+          <text style={{ fg: theme.accent, attributes: TextAttributes.BOLD, flexShrink: 0 }}>
             {t("posts.title")}
           </text>
         </Show>
-        <Show when={showPost() == null}>
-          <text style={{ fg: theme.textMuted }}>
+        <Show when={showPost() == null && wide()}>
+          <text style={{ fg: theme.textMuted, flexShrink: 0 }}>
             {t("posts.count", { count: posts()?.total ?? 0 })}
           </text>
         </Show>
-        <Show when={showPost() != null}>
-          <text>
-            {(showPost()?.spec?.title ?? t("post.untitled")).slice(0, 20)}
-            {(showPost()?.spec?.title ?? "").length > 20 ? "…" : ""}
+        <Show when={showPost() != null && wide()}>
+          <text style={{ flexShrink: 0 }}>
+            {(showPost()?.spec?.title ?? t("post.untitled")).slice(0, titleLimit())}
+            {(showPost()?.spec?.title ?? "").length > titleLimit() ? "…" : ""}
           </text>
         </Show>
 
-        <box style={{ flexDirection: "row", gap: 3 }}>
+        <box style={{ flexDirection: "row", gap: 3, flexShrink: 0 }}>
           <text onMouseDown={openUser}>{t("shortcut.user")}</text>
           <text onMouseDown={openLang}>{t("shortcut.language")}</text>
           <text onMouseDown={openTheme}>{t("shortcut.theme")}</text>
