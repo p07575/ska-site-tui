@@ -1,0 +1,302 @@
+/* ============================================================
+   terminal.css — reskins theme-earth into the SKA "opencode"
+   terminal aesthetic, matching the jx-blog terminal artifact.
+   Palette lifted from the TUI's own theme. Loaded AFTER the
+   theme's compiled CSS (so it overrides), together with
+   terminal.js which injects the titlebar / prompt / status bar.
+   ============================================================ */
+:root {
+  --t-bg:      #0a0a0a;
+  --t-panel:   #141414;
+  --t-elem:    #1e1e1e;
+  --t-text:    #eeeeee;
+  --t-dim:     #dcdcdc;
+  --t-muted:   #808080;
+  --t-faint:   #5a5a5a;
+  --t-peach:   #fab283;  /* primary: links, prompts, active */
+  --t-lav:     #9d7cd8;  /* headings */
+  --t-green:   #7fd88f;  /* code / paths / user */
+  --t-cyan:    #56b6c2;  /* meta / tags / alt links */
+  --t-yellow:  #e5c07b;  /* quotes */
+  --t-red:     #e06c75;
+  --t-border:  #3c3c3c;
+  --t-border2: #484848;
+  --t-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code",
+            "Fira Code", Menlo, Consolas, "Liberation Mono", monospace;
+  --t-measure: 74ch;
+}
+
+/* ── ground + type ─────────────────────────────────────── */
+html, body {
+  background: #0a0a0a !important;
+  color: var(--t-text) !important;
+}
+body {
+  background:
+    radial-gradient(120% 120% at 50% -10%, #131313 0%, #0a0a0a 55%) !important;
+  -webkit-font-smoothing: antialiased;
+}
+body, body * { font-family: var(--t-mono) !important; }
+
+/* square + flat: no SaaS rounding, shadows, or blur */
+*, *::before, *::after {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  text-shadow: none !important;
+}
+::selection { background: var(--t-peach); color: #10100c; }
+
+/* ── neutralize theme-earth's slate/gray/blue scale ────── */
+[class*="bg-white"], [class*="bg-slate-50"], [class*="bg-gray-50"],
+[class*="bg-slate-100"] { background-color: var(--t-panel) !important; }
+[class*="bg-slate-900"], [class*="bg-gray-900"] { background-color: var(--t-bg) !important; }
+[class*="bg-slate-800"], [class*="bg-gray-800"] { background-color: var(--t-panel) !important; }
+[class*="bg-slate-700"], [class*="bg-gray-100"], [class*="bg-gray-200"],
+[class*="hover:bg-slate-"], [class*="hover:bg-gray-"] { background-color: var(--t-elem) !important; }
+
+[class*="text-gray-9"], [class*="text-gray-8"], [class*="text-slate-1"],
+[class*="text-slate-50"], [class*="text-black"], [class*="text-white"] { color: var(--t-text) !important; }
+[class*="text-gray-6"], [class*="text-gray-5"], [class*="text-gray-4"],
+[class*="text-slate-3"], [class*="text-slate-4"], [class*="text-slate-5"] { color: var(--t-muted) !important; }
+
+[class*="border-gray-"], [class*="border-slate-"],
+[class*="divide-gray-"], [class*="divide-slate-"] { border-color: var(--t-border) !important; }
+
+/* accents: every blue becomes warm peach */
+[class*="text-blue-"], [class*="hover:text-blue-"]:hover,
+[class*="text-indigo-"], [class*="text-sky-"] { color: var(--t-peach) !important; }
+[class*="bg-blue-"] { background-color: var(--t-peach) !important; color: #10100c !important; }
+[class*="border-blue-"] { border-color: var(--t-peach) !important; }
+[class*="text-red-"] { color: var(--t-red) !important; }
+
+a { color: var(--t-text); text-decoration: none; }
+a:hover { color: var(--t-peach); }
+a:focus-visible { outline: 2px solid var(--t-peach); outline-offset: 2px; }
+
+/* ============================================================
+   TITLE BAR  (injected: .t-titlebar as first child of <header>)
+   ============================================================ */
+header#header-menu {
+  flex-direction: column !important;
+  height: auto !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  background: var(--t-panel) !important;
+  border-bottom: 1px solid var(--t-border) !important;
+}
+.t-titlebar {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; padding: 9px 16px;
+  border-bottom: 1px solid var(--t-border);
+  background: linear-gradient(var(--t-elem), var(--t-panel));
+}
+.t-dots { display: flex; gap: 7px; flex: none; }
+.t-dots i { width: 11px; height: 11px; border-radius: 50% !important; display: block; }
+.t-dots i:nth-child(1) { background: var(--t-peach); }
+.t-dots i:nth-child(2) { background: var(--t-yellow); }
+.t-dots i:nth-child(3) { background: var(--t-green); }
+.t-name  { margin: 0 auto; color: var(--t-muted); font-size: 12.5px; letter-spacing: .04em; }
+.t-badge { color: var(--t-faint); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; flex: none; }
+
+/* ── PROMPT NAV  (the header's original centered row) ───── */
+header#header-menu > div.mx-auto {
+  padding-top: 11px !important; padding-bottom: 11px !important;
+  align-items: baseline !important; gap: 0 !important;
+}
+header#header-menu a[href="/"] img,
+header#header-menu #site-title { display: none !important; }
+
+.t-prompt-prefix {
+  display: inline-flex; align-items: baseline; gap: .1ch;
+  white-space: nowrap; font-size: 14px; margin-right: .8ch;
+}
+.t-prompt-prefix .t-usr    { color: var(--t-green); }
+.t-prompt-prefix .t-sep    { color: var(--t-muted); }
+.t-prompt-prefix .t-path   { color: var(--t-cyan); }
+.t-prompt-prefix .t-dollar { color: var(--t-peach); margin: 0 .4ch; }
+.t-prompt-prefix .t-kw     { color: var(--t-muted); }
+
+/* nav links → the args after `cd` */
+header#header-menu ul[class*="sm:flex"] {
+  gap: 0 !important; align-items: baseline !important;
+}
+header#header-menu ul[class*="sm:flex"] a {
+  color: var(--t-muted) !important; font-size: 14px;
+  padding: 0 .55ch !important; border-bottom: 1px solid transparent;
+}
+header#header-menu ul[class*="sm:flex"] a:hover { color: var(--t-text) !important; }
+header#header-menu ul[class*="sm:flex"] a.t-active {
+  color: var(--t-peach) !important; border-bottom-color: var(--t-peach);
+}
+.t-cursor {
+  display: inline-block; width: .55ch; height: 1.05em;
+  background: var(--t-peach); transform: translateY(2px);
+  margin-left: .5ch; animation: t-blink 1.15s steps(1) infinite;
+}
+@keyframes t-blink { 50% { opacity: 0; } }
+
+/* hide the right-side icons (color globe / search / avatar); keep the
+   mobile hamburger (its own .sm:hidden governs when it shows) */
+header#header-menu ul[x-data="colorSchemeSwitcher"] > li:not(.sm\:hidden) { display: none !important; }
+[x-data="colorSchemeSwitcher"] > li[x-data="dropdown"]:not(.sm\:hidden) { display: none !important; }
+
+/* thin peach rule under the whole header */
+header#header-menu::after {
+  content: ""; display: block; height: 1px;
+  background: linear-gradient(90deg, var(--t-peach), transparent 42%);
+}
+
+/* ============================================================
+   LAYOUT — single centered "terminal" column, no sidebar
+   ============================================================ */
+section.grid.max-w-7xl {
+  max-width: 900px !important;
+  grid-template-columns: 1fr !important;
+  margin-top: 20px !important;
+}
+aside { display: none !important; }
+
+/* The main content card keeps its recolored panel bg (via bg-white above). We do
+   NOT border inner rounded elements — that boxed every icon button, pill and
+   avatar. Only the injected chrome (titlebar/statusbar/dashes) draws borders. */
+
+/* ── command lines (injected: .t-cmd) ──────────────────── */
+.t-cmd {
+  color: var(--t-muted); font-size: 13px; letter-spacing: .02em;
+  margin: 0 0 12px; padding-bottom: 12px;
+  border-bottom: 1px dashed var(--t-border);
+}
+.t-cmd::before { content: "$ "; color: var(--t-green); }
+.t-cmd .t-arg { color: var(--t-cyan); }
+
+/* ============================================================
+   HOME — post list as a terminal file listing
+   ============================================================ */
+#post-list {
+  display: block !important;
+  margin-top: 0 !important;
+  border-top: 0 !important;
+}
+#post-list > div {
+  display: block !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px dashed var(--t-border) !important;
+  padding: 15px 12px !important;
+  margin: 0 -12px !important;
+  transform: none !important;
+}
+#post-list > div:hover { background: var(--t-elem) !important; }
+#post-list img { display: none !important; }              /* covers + avatars */
+#post-list .aspect-h-9, #post-list .aspect-w-16 { display: none !important; }
+#post-list > div > div { padding: 0 !important; }
+#post-list h1 {
+  font-size: 1.02rem !important; line-height: 1.4 !important;
+  margin: 2px 0 !important; -webkit-line-clamp: unset !important;
+}
+#post-list h1 a { color: var(--t-peach) !important; }
+#post-list h1 a::before { content: "▸ "; color: var(--t-faint); }
+#post-list > div:hover h1 a { text-decoration: underline; }
+#post-list > div:hover h1 a::before { color: var(--t-peach); }
+#post-list p { color: var(--t-muted) !important; font-size: .84rem !important; margin: 3px 0 0 !important; }
+#post-list .italic { color: var(--t-cyan) !important; font-style: normal !important; }
+#post-list .tabular-nums { color: var(--t-faint) !important; }
+#post-list .mt-4 { margin-top: 6px !important; }
+
+/* category filter — removed on the home page by terminal.js; on category
+   pages it stays, styled as plain terminal links (no boxes / pills) */
+#filters { gap: .1rem .6rem !important; margin: 0 0 14px !important; font-size: .85rem; }
+#filters li { list-style: none; }
+#filters a, #filters .group {
+  color: var(--t-muted) !important; height: auto !important; padding: 0 !important;
+  background: transparent !important;
+}
+#filters a:hover, #filters .group:hover { color: var(--t-text) !important; background: transparent !important; }
+#filters [class*="bg-gray-1"], #filters [class*="bg-slate-7"] {
+  background: transparent !important; color: var(--t-peach) !important;
+}
+
+/* ============================================================
+   POST — rendered article
+   ============================================================ */
+#content, .markdown-body, .tailwind-typography, .prose { color: var(--t-dim) !important; }
+#content :is(h1,h2,h3,h4),
+.markdown-body :is(h1,h2,h3,h4), .prose :is(h1,h2,h3,h4) {
+  color: var(--t-lav) !important; border-bottom-color: var(--t-border) !important;
+}
+#content h1::before, .markdown-body h1::before { content: "# ";   color: var(--t-faint); font-weight: 400; }
+#content h2::before, .markdown-body h2::before { content: "## ";  color: var(--t-faint); font-weight: 400; }
+#content h3::before, .markdown-body h3::before { content: "### "; color: var(--t-faint); font-weight: 400; }
+#content a, .markdown-body a, .prose a {
+  color: var(--t-peach) !important; text-decoration: underline; text-underline-offset: 3px;
+}
+#content a:hover, .markdown-body a:hover { color: var(--t-yellow) !important; }
+#content code, .markdown-body code, .prose code {
+  color: var(--t-green) !important; background: var(--t-elem) !important;
+  border: 1px solid var(--t-border) !important; padding: 1px 6px;
+}
+#content pre, .markdown-body pre, .prose pre {
+  background: #000 !important; border: 1px solid var(--t-border) !important;
+}
+#content pre code, .markdown-body pre code, .prose pre code {
+  border: 0 !important; background: transparent !important; color: var(--t-text) !important;
+}
+#content blockquote, .markdown-body blockquote, .prose blockquote {
+  border-left: 2px solid var(--t-yellow) !important; color: var(--t-yellow) !important;
+  background: transparent !important; font-style: normal;
+}
+#content ul, .markdown-body ul { list-style: none !important; padding-left: 0 !important; }
+#content ul > li, .markdown-body ul > li { position: relative; padding-left: 2.2ch; }
+#content ul > li::before, .markdown-body ul > li::before {
+  content: "–"; position: absolute; left: 0; color: var(--t-peach);
+}
+/* post title (outside #content) */
+section.grid h1.text-3xl { color: var(--t-lav) !important; }
+
+/* ── forms / search ────────────────────────────────────── */
+input, textarea, select {
+  background: var(--t-bg) !important; color: var(--t-text) !important;
+  border: 1px solid var(--t-border) !important;
+}
+input::placeholder { color: var(--t-faint) !important; }
+input:focus, textarea:focus { border-color: var(--t-peach) !important; outline: none !important; }
+
+/* ============================================================
+   STATUS BAR  (injected: .t-statusbar into <footer>)
+   ============================================================ */
+footer.t-footer {
+  margin-top: auto !important;
+  background: var(--t-elem) !important;
+  border-top: 1px solid var(--t-border) !important;
+  padding: 0 !important;
+}
+footer.t-footer > *:not(.t-statusbar) { display: none !important; }
+.t-statusbar {
+  display: flex; align-items: center; gap: 16px;
+  max-width: 900px; margin: 0 auto;
+  padding: 7px 16px; font-size: 12px; color: var(--t-muted);
+}
+.t-statusbar .t-mode {
+  background: var(--t-peach); color: #1a1206; font-weight: 700;
+  padding: 1px 9px; letter-spacing: .08em;
+}
+.t-statusbar .t-path  { color: var(--t-cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-statusbar .t-right { margin-left: auto; color: var(--t-faint); flex: none; }
+
+/* committed to dark → hide any stray color-scheme switcher */
+[x-data="colorSchemeSwitcher"] > li[th\:if] { }
+
+/* footer pinning: body starts .hidden (display:none) until theme JS reveals it */
+html { min-height: 100%; }
+body:not(.hidden) {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex !important; flex-direction: column;
+}
+
+@media (prefers-reduced-motion: reduce) { .t-cursor { animation: none; } }
+
+@media (max-width: 640px) {
+  .t-name { display: none; }
+  section.grid.max-w-7xl { margin-top: 12px !important; }
+}
